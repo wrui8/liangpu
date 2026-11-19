@@ -1,0 +1,41 @@
+{
+  "name": "良扑内网源",
+  "identifier": "com.liangpu.internal.source",
+  "subtitle": "良扑 · 内网团队评分",
+  "description": "良扑 iOS 客户端的内网分发源。在 AltStore / SideStore 中添加本源地址即可安装与更新；安装时由 AltStore 用你自己的 Apple ID 重新签名。官方下载页：http://10.28.13.214/download/",
+  "iconURL": "http://10.28.13.214/download/assets/ios-icon.png",
+  "website": "http://10.28.13.214/download/",
+  "tintColor": "#F4C430",
+  "featuredApps": ["com.liangpu.liangpuapp"],
+  "apps": [
+    {
+      "name": "良扑",
+      "bundleIdentifier": "com.liangpu.liangpuapp",
+      "developerName": "良扑",
+      "subtitle": "给身边的团队和同事打分",
+      "localizedDescription": "内网团队评分 App：团队 / 员工 / 需求评分、动态广场、评论与多层回复、消息通知、用户主页，以及悬浮小狮助手。\n\n首次打开需填写内网服务器地址（向运维获取），App 已内置内部 CA，无需在手机上安装证书。\n\n本 App 为未签名包，由 AltStore 用你自己的 Apple ID 在本机签名后安装；免费 Apple ID 每 7 天需续签一次，AltStore 会在与 AltServer 同一网络时自动完成。",
+      "iconURL": "http://10.28.13.214/download/assets/ios-icon.png",
+      "tintColor": "#F4C430",
+      "category": "social",
+      "screenshots": [],
+      "versions": [
+        {
+          "version": "0.1.0",
+          "date": "2026-11-19",
+          "downloadURL": "http://10.28.13.214/downloads/liangpu-ios-0.1.0-unsigned.ipa",
+          "size": 9093480,
+          "minOSVersion": "15.0",
+          "localizedDescription": "首个版本：团队 / 员工 / 需求评分、动态与评论、消息通知、用户主页、悬浮小狮助手。"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {
+          "NSLocalNetworkUsageDescription": "良扑需要连接内网的评分服务器，用于登录、查看团队与需求评分。",
+          "NSPhotoLibraryUsageDescription": "良扑需要访问相册，以便在发布动态和需求时上传图片。"
+        }
+      }
+    }
+  ],
+  "news": []
+}

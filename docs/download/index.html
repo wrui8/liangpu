@@ -338,6 +338,37 @@ section.block{padding:80px 0;position:relative}
 .note b{color:var(--gold);white-space:nowrap;flex:none}
 .note code{font-family:var(--mono);font-size:12px;color:var(--gold-hi)}
 
+/* ------- iOS 安装说明 ------- */
+.ios-panel{grid-column:1 / -1}
+.ios-lead{font-size:13px;color:var(--muted);line-height:1.75;margin-top:16px}
+.ios-lead b{color:#e6e2dc}
+.methods{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;margin-top:18px;align-items:start}
+.method{
+  border:1px solid var(--line);border-radius:16px;padding:18px 20px 8px;
+  background:rgba(255,255,255,.02);
+}
+.method.primary{
+  border-color:rgba(244,196,48,.26);
+  background:linear-gradient(180deg,rgba(244,196,48,.055),rgba(255,255,255,.014));
+}
+.method-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px}
+.method-head h4{font-size:14.5px;font-weight:800}
+.method-head .rec{
+  font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:1.4px;color:var(--gold);
+  border:1px solid rgba(244,196,48,.32);border-radius:6px;padding:2px 6px;
+}
+.method-sub{font-size:12.3px;color:var(--dim);line-height:1.68;margin-bottom:6px}
+.guide-list.dense li{padding:13px 0 11px 40px}
+.guide-list.dense li::before{top:13px}
+.guide-list.dense h4{font-size:13.3px}
+.guide-list.dense p{font-size:12.2px;line-height:1.65}
+.src-box{
+  margin:6px 0 14px;padding:12px 14px;border:1px dashed rgba(244,196,48,.28);border-radius:12px;
+  background:rgba(244,196,48,.05);font-size:12.2px;color:var(--muted);line-height:1.7;
+}
+.src-box b{color:var(--gold);font-weight:800}
+.src-box code{font-family:var(--mono);font-size:11.8px;color:var(--gold-hi);word-break:break-all}
+
 /* ------- FAQ ------- */
 .faq{display:grid;grid-template-columns:1fr 1fr;gap:13px;align-items:start}
 details{
@@ -396,6 +427,7 @@ footer{border-top:1px solid var(--line);padding:36px 0 46px;margin-top:16px;colo
   .features{grid-template-columns:repeat(2,1fr)}
   .dl-grid{grid-template-columns:1fr;max-width:560px;margin:0 auto}
   .guide-grid{grid-template-columns:1fr}
+  .methods{grid-template-columns:1fr}
   .faq{grid-template-columns:1fr}
   .chip-a{right:4%}
   .chip-b{left:4%}
@@ -596,8 +628,8 @@ footer{border-top:1px solid var(--line);padding:36px 0 46px;margin-top:16px;colo
               <small>ipa · 8.7 MB · 未签名</small>
             </a>
             <div class="dl-alt">
-              电脑安装 <b>Sideloadly</b>，导入本 ipa 并用你的 Apple ID 重签后装到 iPhone；
-              再到「设置 → 通用 → VPN与设备管理」信任描述文件（个人签名 7 天有效）。
+              未签名包需配合电脑签一次名。推荐 AltStore，之后在办公室 WiFi 下自动续签；
+              <a href="#ios-guide">查看 iPhone 安装步骤</a>
             </div>
           </div>
         </article>
@@ -728,6 +760,99 @@ footer{border-top:1px solid var(--line);padding:36px 0 46px;margin-top:16px;colo
             </li>
           </ol>
         </div>
+
+        <div class="guide-panel ios-panel" id="ios-guide">
+          <div class="guide-head">
+            <span class="tag">IOS</span>
+            <h3>iPhone / iPad 安装：先用电脑签一次名</h3>
+            <span class="cnt">iOS 15+</span>
+          </div>
+          <p class="ios-lead">
+            苹果不允许直接安装未签名的 App，所以 iPhone 需要先<strong>用你自己的 Apple ID 在本机签一次名</strong>。
+            这一步需要一台电脑配合（Windows 即可，只需一次）；推荐用 <b>AltStore</b>：签完之后只要手机连办公室 WiFi，
+            每 7 天会自动续签，平时不用再插电脑。手机上直接点下载的 ipa 只会存进「文件」，<b>无法直接安装</b>。
+          </p>
+
+          <div class="src-box">
+            <b>AltStore 内网源（推荐）</b><br>
+            在 AltStore 的 Browse 页右上角点 <code>+</code>，填入
+            <code>http://10.28.13.214/download/altstore.json</code>；
+            添加后直接在源里点「良扑 → Install」，以后有新版本也在这里点 Update。
+          </div>
+
+          <div class="methods">
+            <div class="method primary">
+              <div class="method-head"><h4>方法 A · AltStore 自动续签</h4><span class="rec">推荐</span></div>
+              <p class="method-sub">一次性装好，之后在办公室 WiFi 下自动续签，不用每周插线。</p>
+              <ol class="guide-list dense">
+                <li>
+                  <h4>电脑装工具</h4>
+                  <p>Windows 安装苹果<b>官网版</b> iTunes 与 iCloud（不要用 Microsoft Store 版），再安装 AltServer（altstore.io）。</p>
+                </li>
+                <li>
+                  <h4>USB 连上 iPhone</h4>
+                  <p>手机弹出「要信任此电脑吗」点<b>信任</b>，并输入锁屏密码。</p>
+                </li>
+                <li>
+                  <h4>安装 AltStore</h4>
+                  <p>任务栏托盘 → AltServer 图标 → <b>Install AltStore</b> → 选择你的 iPhone → 输入你的 Apple ID（建议用 App 专用密码，见下方安全提示）。</p>
+                </li>
+                <li>
+                  <h4>手机授权</h4>
+                  <p>设置 → 通用 → VPN与设备管理 → 信任你的 Apple ID；iOS 16 及以上再进入 设置 → 隐私与安全性 → <b>开发者模式</b> 打开并重启手机。</p>
+                </li>
+                <li>
+                  <h4>安装良扑</h4>
+                  <p>手机打开 AltStore → 按上面的源地址添加内网源 → 点「良扑 → Install」；也可以先在 Safari 下载 ipa，再在 AltStore「My Apps」里点 <b>+</b> 选中它。</p>
+                </li>
+                <li>
+                  <h4>首次打开</h4>
+                  <p>允许「本地网络」→ 服务器地址填 <code>10.28.13.214:7001</code> → 用你的账号登录。</p>
+                </li>
+                <li>
+                  <h4>之后自动续签</h4>
+                  <p>手机与运行 AltServer 的电脑（就是这台内网服务器）在同一 WiFi 时，AltStore 会每 7 天自动续签；偶尔失败，打开 AltStore 点一下 <b>Refresh</b> 即可。</p>
+                </li>
+                <li>
+                  <h4>有新版本时</h4>
+                  <p>在 AltStore 内网源里点 <b>Update</b>，或重新下载 ipa 覆盖安装；<b>聊天与评分数据不会丢</b>。</p>
+                </li>
+              </ol>
+            </div>
+
+            <div class="method">
+              <div class="method-head"><h4>方法 B · Sideloadly 单次安装</h4></div>
+              <p class="method-sub">不装 AltServer 时用；每次 7 天到期后要再插一次电脑。</p>
+              <ol class="guide-list dense">
+                <li>
+                  <h4>电脑装 Sideloadly</h4>
+                  <p>先装苹果官网版 iTunes，再从 sideloadly.io 下载 Sideloadly。</p>
+                </li>
+                <li>
+                  <h4>连手机并拖入 ipa</h4>
+                  <p>USB 连上 iPhone 并信任电脑，把下载好的 ipa 拖进 Sideloadly，填自己的 Apple ID，点 <b>Start</b>。</p>
+                </li>
+                <li>
+                  <h4>信任描述文件</h4>
+                  <p>设置 → 通用 → VPN与设备管理 → 信任你的 Apple ID；iOS 16 及以上再打开开发者模式并重启。</p>
+                </li>
+                <li>
+                  <h4>7 天后重签</h4>
+                  <p>到期 App 打不开时，用同一个 ipa、同一个 Apple ID 再走一遍即可覆盖安装，数据保留。</p>
+                </li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="note">
+            <b>安全提示</b>
+            <span>
+              Apple ID 只在你自己的电脑上用于本机签名，不经过良扑服务器。不放心可到 <code>appleid.apple.com</code>
+              生成一个 <b>App 专用密码</b> 填给 Sideloadly / AltServer。
+              免费 Apple ID 同一时间最多 3 个自签 App，每个 7 天有效；到期 App 打不开属于正常现象，按上面步骤续签即可。
+            </span>
+          </div>
+        </div>
       </div>
 
       <div class="note">
@@ -751,7 +876,23 @@ footer{border-top:1px solid var(--line);padding:36px 0 46px;margin-top:16px;colo
         </details>
         <details>
           <summary>iOS 版怎么安装？</summary>
-          <p>苹果只允许在 macOS + Xcode 上编译，本站提供的是云端构建的<b>未签名 IPA</b>，不能直接双击安装。请用电脑下载并安装 <b>Sideloadly</b>（Windows / macOS 均可），连上 iPhone，把 ipa 拖进去，用你自己的 Apple ID 重签后安装；装好后到「设置 → 通用 → VPN与设备管理」点信任。iOS 16 及以上还需在「设置 → 隐私与安全性 → 开发者模式」中打开开发者模式并重启。个人签名 7 天有效，到期用同样方法重签即可，数据不会丢。</p>
+          <p>本站提供的是云端构建的<b>未签名 IPA</b>，iPhone 不能直接安装，需要先用你自己的 Apple ID 在本机签一次名。推荐用 <b>AltStore</b>（Windows 电脑一次性安装，之后只要和办公室 WiFi 里的 AltServer 同网，就会每 7 天自动续签）；不想装 AltServer 就用 <b>Sideloadly</b>，每次到期后重新插一次电脑。完整步骤见<a href="#ios-guide">「iPhone / iPad 安装」</a>。</p>
+        </details>
+        <details>
+          <summary>iPhone 上直接点下载的 ipa 能装吗？</summary>
+          <p>不能。iOS 只接受带有效签名的 App，未签名 ipa 点开后只会保存到「文件」App，不会出现安装或「信任」按钮。必须借助电脑（Sideloadly / AltStore）用 Apple ID 重签；如果想让同事点个链接就装好，需要公司申请苹果开发者账号（Ad Hoc 或 TestFlight）。</p>
+        </details>
+        <details>
+          <summary>为什么 7 天要续签一次？</summary>
+          <p>免费 Apple ID 的签名有效期是 7 天，到期后 App 打不开、图标变灰都属于正常现象，不是安装包坏了。用 AltStore 续签不需要重新下载 App，<b>聊天、评分、登录状态等数据都不会丢</b>；同一时间免费账号最多保留 3 个自签 App。</p>
+        </details>
+        <details>
+          <summary>AltStore 续签失败 / 图标变灰怎么办？</summary>
+          <p>先确认手机和运行 AltServer 的电脑在同一个 WiFi、电脑没有关机或睡眠，然后打开 AltStore 点一下 <b>Refresh</b>；仍失败就把手机用 USB 连回电脑，在 AltServer 托盘菜单里重新 Install AltStore，再在 AltStore 里更新良扑。iOS 16 以上如果没有打开「开发者模式」，App 也会打不开，需要在 设置 → 隐私与安全性 里开启并重启。</p>
+        </details>
+        <details>
+          <summary>没有电脑能装 iOS 版吗？</summary>
+          <p>不能，苹果要求每台设备用自己的账号签名。完全不用电脑的安装方式（Safari 点链接直接装、或 TestFlight 点邀请）都需要付费的苹果开发者账号，需要的话可以让运维申请后统一分发。</p>
         </details>
         <details>
           <summary>手机打开本页需要安装证书吗？</summary>

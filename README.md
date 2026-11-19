@@ -142,6 +142,11 @@ bash scripts/build-ios-unsigned.sh
   需用 Sideloadly / AltStore 以用户自己的 Apple ID 重签名后安装，再到
   「设置 → 通用 → VPN与设备管理」信任描述文件（个人签名 7 天有效，到期需重签）。
 
+  推荐让用户装 **AltStore**：电脑一次性装好 AltServer 后，手机在办公室 WiFi 下会自动
+  每 7 天续签。官网同时提供 AltStore 内网源 `http://<服务器IP>/download/altstore.json`
+  （文件在 `docs/download/altstore.json`，发新版本时需同步修改版本号、大小与下载地址），
+  用户在 AltStore 里添加源即可安装与更新。完整步骤写在官网下载页「iPhone / iPad 安装」小节。
+
   手边没有 Mac 时，推到 GitHub 后由 `.github/workflows/ios-unsigned.yml` 在 macOS runner
   上自动构建：Actions 页面进入「iOS 未签名包」→ Run workflow，或直接推送 `app/` 的改动。
   构建完成后 ipa 会同时挂到固定 Release（免登录下载：

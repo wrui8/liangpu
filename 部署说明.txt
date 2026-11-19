@@ -63,9 +63,12 @@
   更新安装包时直接替换文件即可，无需重启；也可在项目目录执行
   powershell scripts\refresh-dist.ps1 统一刷新。
   官网下载页提供 Windows、Android 与 iOS 入口。
-  iOS 为未签名 ipa（由 GitHub Actions 的 macOS runner 构建），iPhone 用户需在电脑上
-  用 Sideloadly 导入 ipa、以自己的 Apple ID 重签后安装，再到「设置 → 通用 →
-  VPN与设备管理」信任描述文件（个人签名 7 天有效，到期重签，数据不丢）。
+  iOS 为未签名 ipa（由 GitHub Actions 的 macOS runner 构建）。苹果不允许手机直接安装，
+  下载页「iPhone / iPad 安装」一节写了两条路：推荐 AltStore（电脑一次性配置好 AltServer，
+  之后手机在办公室 WiFi 下自动每 7 天续签），或 Sideloadly（每次到期插一次电脑重签，
+  数据不丢）。用户需要在手机上信任自己的 Apple ID 描述文件，iOS 16 以上还要打开开发者模式。
+  AltStore 内网源：http://<服务器IP>/download/altstore.json
+  （发新版本时需同步修改 docs/download/altstore.json 里的版本号、ipa 地址与文件大小）。
 
   这是 HTTPS-only 部署：明文 HTTP 无法连接。
   旧版客户端（HTTP）需要重新安装本目录配套的 APK / exe。
