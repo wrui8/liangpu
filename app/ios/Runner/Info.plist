@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>良扑需要连接内网的评分服务器，用于登录、查看团队与需求评分。</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>良扑需要访问相册，以便在发布动态和需求时上传图片。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
