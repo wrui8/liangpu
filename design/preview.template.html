@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>小狮子 · 矢量立体动画预览 · 良扑</title>
+<style>
+  :root {
+    --gold: #f4c430;
+    --gold-deep: #8a6a00;
+    --bg: #f4f5f8;
+    --card: #ffffff;
+    --line: #e9ebf1;
+    --text: #1f2430;
+    --text2: #4a5060;
+    --text3: #8a909c;
+    --breathe-amp: 0.032;
+    --breathe-dur: 2.4s;
+    --glow-opacity: 0.16;
+  }
+  body.dark {
+    --bg: #15171b;
+    --card: #1e2026;
+    --line: #2b2e36;
+    --text: #eef0f4;
+    --text2: #c3c8d2;
+    --text3: #8b929e;
+    --gold-deep: #ffde7a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 28px 20px 60px;
+    transition: background .3s, color .3s;
+  }
+  .wrap { width: min(960px, 100%); }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { font-size: 13px; color: var(--text3); margin-bottom: 20px; line-height: 1.7; }
+
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 16px; margin-bottom: 20px; font-size: 13px;
+  }
+  .group { display: flex; align-items: center; gap: 8px; }
+  .group b { font-weight: 600; color: var(--text2); font-size: 12px; }
+  .switch { display: flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; }
+  .switch input { display: none; }
+  .track {
+    width: 36px; height: 20px; border-radius: 999px; background: var(--line);
+    position: relative; transition: background .2s; flex: none;
+  }
+  .track::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+    border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    transition: transform .2s;
+  }
+  .switch input:checked + .track { background: var(--gold); }
+  .switch input:checked + .track::after { transform: translateX(16px); }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 18px;
+  }
+  .panel {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+    padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 14px;
+  }
+  .panel h2 { font-size: 13px; margin: 0; color: var(--text2); font-weight: 600; letter-spacing: .02em; align-self: flex-start; }
+  .panel .note { font-size: 11.5px; color: var(--text3); line-height: 1.7; align-self: flex-start; }
+
+  /* ---------- 形象本身 ---------- */
+  .lion-art { display: block; position: relative; }
+  .lion-art svg {
+    display: block; width: 100%; height: 100%;
+    animation: blink 5.2s infinite;
+    transform-origin: center bottom;
+  }
+  .lion-float { animation: floaty 3.4s ease-in-out infinite; transform-origin: center bottom; }
+  .lion-tilt { animation: tilt 3.4s ease-in-out infinite; transform-origin: center bottom; }
+  .lion-breathe { animation: breathe var(--breathe-dur) ease-in-out infinite; transform-origin: center bottom; }
+
+  @keyframes floaty {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5%); }
+  }
+  @keyframes tilt {
+    0%, 100% { transform: rotate(-1.4deg); }
+    50% { transform: rotate(1.4deg); }
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(calc(1 + var(--breathe-amp))); }
+  }
+  @keyframes blink {
+    0%, 83.9% { transform: scale(1, 1); }
+    85% { transform: scale(1.07, 0.86); }
+    87% { transform: scale(1.07, 0.86); }
+    90% { transform: scale(0.99, 1.02); }
+    93%, 100% { transform: scale(1, 1); }
+  }
+
+  .glow {
+    position: absolute; left: 50%; bottom: 4%;
+    width: 78%; height: 30%; transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(244,196,48,var(--glow-opacity)) 0%, rgba(244,196,48,0) 70%);
+    animation: glowPulse var(--breathe-dur) ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes glowPulse {
+    from { opacity: 0.55; transform: translateX(-50%) scale(0.96); }
+    to   { opacity: 1;    transform: translateX(-50%) scale(1.06); }
+  }
+
+  body.thinking {
+    --breathe-amp: 0.065;
+    --breathe-dur: 1.5s;
+    --glow-opacity: 0.30;
+  }
+  body.thinking .lion-float { animation-duration: 2.1s; }
+  body.paused .lion-float, body.paused .lion-tilt, body.paused .lion-breathe,
+  body.paused .lion-art svg, body.paused .glow { animation-play-state: paused; }
+
+  /* 尺寸展示台 */
+  .hero { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: 6px 0 2px; }
+  .hero .stage { position: relative; }
+  .sizes { display: flex; align-items: flex-end; gap: 22px; flex-wrap: wrap; justify-content: center; padding: 8px 0 2px; }
+  .size-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .size-item span { font-size: 10.5px; color: var(--text3); }
+
+  /* 悬浮球：无底板无角标 */
+  .orb-area {
+    position: relative; width: 100%; height: 130px; border-radius: 14px;
+    display: flex; align-items: flex-end; justify-content: flex-end;
+    padding: 0 14px 14px;
+    background:
+      linear-gradient(180deg, rgba(244,196,48,.05), rgba(244,196,48,0)),
+      repeating-linear-gradient(0deg, transparent 0 27px, var(--line) 27px 28px),
+      repeating-linear-gradient(90deg, transparent 0 27px, var(--line) 27px 28px);
+    border: 1px dashed var(--line);
+  }
+  .orb { position: relative; width: 62px; height: 62px; display: flex; align-items: flex-end; justify-content: center; }
+  .orb .lion-art { width: 56px; height: 56px; }
+
+  /* 面板 */
+  .chat { width: 100%; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  .chat-head {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: linear-gradient(135deg, rgba(244,196,48,.16), var(--card));
+    border-bottom: 1px solid var(--line);
+  }
+  .chat-head .lion-art { width: 34px; height: 34px; flex: none; }
+  .chat-head .name { font-size: 14px; font-weight: 800; }
+  .chat-head .status { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .chat-body { padding: 14px 16px 16px; }
+  .chat-body .lion-art { width: 56px; height: 56px; }
+  .chat-body .greet { font-size: 15px; font-weight: 700; line-height: 1.6; margin: 10px 0 8px; }
+  .chat-body .intro { font-size: 12px; color: var(--text3); line-height: 1.7; margin: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .chip { font-size: 11px; color: var(--gold-deep); background: rgba(244,196,48,.12); border-radius: 999px; padding: 4px 10px; }
+
+  .hint { margin-top: 22px; font-size: 12px; color: var(--text3); line-height: 1.8; }
+  code { background: rgba(127,127,127,.12); padding: 1px 5px; border-radius: 4px; font-size: 11.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>小狮子 · 矢量立体动画</h1>
+  <div class="sub">
+    不再使用原图：形象由代码绘制（Flutter 端 CustomPainter，预览页同参数 SVG）。<br />
+    立体感来自：鬃毛前后两圈叠压、脸部球面渐变、顶部受光/底部反光、眼睛双高光、鼻尖高光、落地投影。
+  </div>
+
+  <div class="toolbar">
+    <label class="switch">
+      <input type="checkbox" id="thinking"><span class="track"></span>思考中（呼吸加快）
+    </label>
+    <label class="switch">
+      <input type="checkbox" id="dark"><span class="track"></span>深色背景
+    </label>
+    <label class="switch">
+      <input type="checkbox" id="pause"><span class="track"></span>暂停动画
+    </label>
+  </div>
+
+  <div class="grid">
+    <!-- 1. 大图 -->
+    <div class="panel" style="grid-column: 1 / -1;">
+      <h2>1 · 形象（大图看立体层次）</h2>
+      <div class="hero">
+        <div class="stage">
+          <div class="glow"></div>
+          <div class="lion-float">
+            <div class="lion-tilt">
+              <div class="lion-breathe">
+                <div class="lion-art" data-lion style="width:168px;height:168px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="note">悬浮 + 摆头 + 呼吸 + 每 5.2 秒一次眨眼（眼睛先闭、身体贴地挤压回弹）。</div>
+    </div>
+
+    <!-- 2. 尺寸 -->
+    <div class="panel">
+      <h2>2 · 各场景尺寸</h2>
+      <div class="sizes">
+        <div class="size-item"><div class="lion-art" data-lion style="width:20px;height:20px"></div><span>20 · 评论区</span></div>
+        <div class="size-item"><div class="lion-art" data-lion style="width:24px;height:24px"></div><span>24</span></div>
+        <div class="size-item"><div class="lion-art" data-lion style="width:34px;height:34px"></div><span>34 · 面板头</span></div>
+        <div class="size-item"><div class="lion-art" data-lion style="width:56px;height:56px"></div><span>56 · 悬浮球</span></div>
+        <div class="size-item"><div class="lion-art" data-lion style="width:64px;height:64px"></div><span>64 · 名片</span></div>
+      </div>
+      <div class="note">小尺寸下鬃毛与口鼻仍保持可辨识，高光点保证「有球体感」。</div>
+    </div>
+
+    <!-- 3. 悬浮球 -->
+    <div class="panel">
+      <h2>3 · 悬浮球（无外框、无 AI 角标）</h2>
+      <div class="orb-area">
+        <div class="orb">
+          <div class="lion-float">
+            <div class="lion-tilt">
+              <div class="lion-breathe">
+                <div class="lion-art" data-lion></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="note">角色独立浮在界面上；拖动时放大 8%，长按看名片。</div>
+    </div>
+
+    <!-- 4. 面板空态 -->
+    <div class="panel" style="grid-column: 1 / -1;">
+      <h2>4 · 聊天面板</h2>
+      <div class="chat">
+        <div class="chat-head">
+          <div class="lion-art" data-lion></div>
+          <div>
+            <div class="name">小狮</div>
+            <div class="status">在线 · 可以问我评分、需求或评论</div>
+          </div>
+        </div>
+        <div class="chat-body">
+          <div class="lion-art" data-lion></div>
+          <div class="greet">嗨，我是小狮。想看看谁的评分最高，还是让我帮你分析某个团队？</div>
+          <p class="intro">我是良扑里的 AI 助手小狮，能查团队评分、看需求、分析得分趋势，也能在评论区接住你的 @。</p>
+          <div class="chips">
+            <span class="chip">本周评分最高的团队是谁？</span>
+            <span class="chip">帮我分析一下后端组</span>
+            <span class="chip">你能做什么？</span>
+          </div>
+        </div>
+      </div>
+      <div class="note">面板头像、空态大图与悬浮球同一套绘制，只是尺寸不同。</div>
+    </div>
+  </div>
+
+  <div class="hint">
+    预览文件 <code>D:\code\liangpu\design\preview.html</code>（由 <code>gen-lion.mjs</code> 生成，形象 SVG 与 Flutter 端 <code>lion_art.dart</code> 参数一致）。最终以客户端实际渲染为准。
+  </div>
+</div>
+
+<template id="lion-tpl">{{LION_SVG}}</template>
+
+<script>
+  // 把同一份 SVG 复制到所有占位处
+  const tpl = document.getElementById('lion-tpl');
+  document.querySelectorAll('[data-lion]').forEach(el => {
+    el.appendChild(tpl.content.cloneNode(true));
+  });
+
+  document.getElementById('thinking').addEventListener('change', e => {
+    document.body.classList.toggle('thinking', e.target.checked);
+  });
+  document.getElementById('dark').addEventListener('change', e => {
+    document.body.classList.toggle('dark', e.target.checked);
+  });
+  document.getElementById('pause').addEventListener('change', e => {
+    document.body.classList.toggle('paused', e.target.checked);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+良扑 · 服务端 Docker 部署包 v0.1.0
+====================================
+
+一、前提
+  - 安装 Docker Desktop（Windows）或 Docker Engine + Compose v2
+  - 服务器 80、7001、7003 端口空闲，防火墙同时放行 80、7001 与 7003
+  - 7001 为 HTTPS（需信任内部 CA）；7003 为官网公开端口（明文，
+    手机浏览器无需安装证书即可打开下载页）
+  - 7002 是容器内部 HTTPS 端口，不对外映射，无需放行
+
+二、证书（首次部署必做）
+  bash scripts/gen-certs.sh 10.28.13.214
+
+  脚本会在 docker-data/certs/ 下生成内部 CA 与服务器证书，
+  证书绑定服务器 IP，IP 变化时需重新执行并用新 IP 参数重签。
+  证书有效期 825 天，到期后重跑脚本会自动复用 CA、只重签服务器证书，
+  已安装的客户端无需更新。
+
+  管理电脑需要信任根证书（管理员身份可选 -user 装到当前用户）：
+  certutil -addstore -user Root "docker-data\certs\ca.pem"
+
+  也可以做成双击安装：把 ca.pem 与「安装证书.cmd」放在同一文件夹，
+  双击运行即可，装一次后该电脑浏览器即可访问管理端。
+  同事使用的 App 内置证书，不需要安装任何东西。
+
+三、部署（在解压后的目录中执行）
+  首次部署先把 .env.example 复制为 .env，并把 JWT_SECRET 改成随机值
+  （生成方法见 .env.example 内注释），然后：
+  docker compose up -d --build
+
+  首次启动会自动建表并写入演示数据；数据库文件位于
+  docker-data/liangpu.db，动态图片位于 docker-data/uploads/。
+  请定期备份整个 docker-data 目录（含 certs/、liangpu.db、uploads/、downloads/）。
+  证书私钥 docker-data/certs/server.key 与 CA 私钥 ca.key 务必妥善保管。
+
+  容器已设置 TZ=Asia/Shanghai；数据库存 UTC 时间戳，接口返回 ISO 时间，
+  App 与网页按本地时区显示，与北京时间一致。
+  已有旧版数据库时，启动会自动同步新增的动态、评论回复等表结构，不会清空数据。
+
+四、访问
+  管理后台   https://<服务器IP>:7001/
+  UI 原型    https://<服务器IP>:7001/prototype/
+  官网下载页 http://<服务器IP>/  或  http://<服务器IP>:7003/
+                                                  （公开访问，手机浏览器直接打开，
+                                                    无需安装内部 CA；同事点开即可下载）
+  健康检查   https://<服务器IP>:7001/api/health
+  账号       admin / admin123（管理员）、demo / demo123（演示用户）
+
+  下载页同时保留在 https://<服务器IP>:7001/download/，供已信任内部 CA 的电脑访问；
+  对外分发、特别是手机下载 APK，请统一使用 7003 入口。
+
+  浏览器直接输入「<服务器IP>:7001」（不带 https://）也可以：
+  服务端会在同一端口把 HTTP 请求 308 跳转到 HTTPS，无需手动补协议。
+  跳转后若提示证书无效，说明这台电脑尚未安装内部 CA，按第二节安装即可。
+
+  安装包放在 docker-data/downloads/（只读挂载到容器 /app/downloads）：
+    liangpu-windows-0.1.0.zip          Windows 客户端
+    liangpu-android-arm64-v8a-0.1.0.apk  Android 客户端（多数机型，官网主下载）
+    liangpu-android-0.1.0.zip           Android 全机型包（三个 ABI + 安装说明）
+    liangpu-admin-cert.zip              管理端证书安装包
+  更新安装包时直接替换文件即可，无需重启；也可在项目目录执行
+  powershell scripts\refresh-dist.ps1 统一刷新。
+  官网下载页提供 Windows 与 Android 入口；iOS 需在 macOS 生成未签名包后由用户自签安装
+  （iOS 工程已就绪，需在 macOS 上构建未签名 IPA，由用户用 Sideloadly / AltStore 自行签名安装）。
+
+  这是 HTTPS-only 部署：明文 HTTP 无法连接。
+  旧版客户端（HTTP）需要重新安装本目录配套的 APK / exe。
+
+  客户端不再预置服务器地址，首次启动会引导填写（地址请向运维获取），
+  填一次后自动记住，之后可在登录页底部或「我的」页修改。
+  本版客户端新增：动态（发布文字 + 最多 4 张图片，按点赞量与时间排序）、
+  动态评论区（评论支持点赞与多层回复）、消息通知（评论/回复被赞、被回复、
+  动态被赞或被评论时出现红点）、用户主页（点头像跨用户查看动态）。
+  回复支持任意层级（回复的回复），界面按根评论平铺并显示「A 回复 @B」；
+  评论、回复弹窗与打分短评支持回车发送（Shift+Enter 换行）。
+  容器启动时会自动回填历史评论的层级字段，并自动创建通知表，无需手工迁移。
+  动态图片经 /uploads/ 由服务端直接提供，随 docker-data 持久化。
+
+  评分规则：团队分 = 团队直接评分 + 该团队全部员工评分的合并平均。
+  每次容器启动会自动重算一次（日志显示「团队评分合并重算完成」），
+  给员工打分时也会即时重算团队分，无需手工维护。
+
+五、运维
+  查看日志   docker compose logs -f
+  停止服务   docker compose down
+  重新构建   docker compose up -d --build      （代码更新后）
+  修改 JWT 密钥：编辑 .env 中的 JWT_SECRET 后重新 up -d（所有人需重新登录）
+  登录 token 默认 7 天过期，可用 JWT_EXPIRES_IN 调整
+  清理动态图片需同时处理数据库：管理后台「动态管理」删除会自动清理对应图片；
+  不要直接删除 docker-data/uploads/ 下的文件，否则动态配图会加载失败

@@ -1,0 +1,262 @@
+:root {
+  --lp-brand: #e0202d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #f5f6f8;
+  color: #1c1f24;
+}
+
+.layout {
+  height: 100%;
+}
+
+.aside {
+  background: #fff;
+  border-right: 1px solid #ececf0;
+  display: flex;
+  flex-direction: column;
+}
+
+.aside .brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 60px;
+  padding: 0 18px;
+  font-weight: 800;
+  font-size: 15px;
+  border-bottom: 1px solid #f0f0f3;
+}
+
+.aside .brand .mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f23441, #b3161f);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+}
+
+.aside .el-menu {
+  border-right: none;
+  flex: 1;
+  padding: 8px;
+}
+
+.aside .el-menu-item {
+  border-radius: 8px;
+  margin-bottom: 2px;
+}
+
+.aside .el-menu-item.is-active {
+  background: #fdecee;
+  color: var(--lp-brand);
+  font-weight: 700;
+}
+
+.header {
+  background: #fff;
+  border-bottom: 1px solid #ececf0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #8a909c;
+}
+
+.header .user {
+  cursor: pointer;
+  color: #303540;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.main {
+  padding: 18px;
+  overflow: auto;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.toolbar .spacer {
+  flex: 1;
+}
+
+.icon-box {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #f3f4ff, #e9ecff);
+  color: #5b6cff;
+  overflow: hidden;
+}
+
+.icon-box.plain {
+  background: #f5f6f8;
+}
+
+.icon-box svg {
+  width: 62%;
+  height: 62%;
+}
+
+.icon-box.big {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+}
+
+.icon-box.big svg {
+  width: 60%;
+  height: 60%;
+}
+
+.icon-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-field .icon-key {
+  font-size: 12px;
+  color: #8a909c;
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 10px;
+  max-height: 420px;
+  overflow: auto;
+  padding: 2px;
+}
+
+.icon-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border: 1.5px solid #ececf0;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.icon-cell:hover {
+  border-color: #f3a3a9;
+}
+
+.icon-cell.on {
+  border-color: var(--lp-brand);
+  box-shadow: 0 4px 14px rgba(224, 32, 45, 0.16);
+}
+
+.icon-cell span {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: #4a5468;
+}
+
+.icon-cell span svg {
+  width: 100%;
+  height: 100%;
+}
+
+.icon-cell small {
+  font-size: 11px;
+  color: #8a909c;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 10px rgba(20, 24, 34, 0.04);
+}
+
+.stat-card .num {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--lp-brand);
+}
+
+.stat-card .label {
+  font-size: 13px;
+  color: #8a909c;
+  margin-top: 4px;
+}
+
+.login-page {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(600px 300px at 20% 10%, rgba(242, 52, 65, 0.08), transparent),
+    radial-gradient(600px 300px at 80% 90%, rgba(91, 108, 255, 0.08), transparent),
+    #f7f8fa;
+}
+
+.login-card {
+  width: 380px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 34px 32px 26px;
+  box-shadow: 0 18px 50px rgba(20, 24, 34, 0.1);
+}
+
+.login-card h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+}
+
+.login-card p {
+  margin: 0 0 22px;
+  color: #8a909c;
+  font-size: 13px;
+}
+
+.login-card .el-button {
+  width: 100%;
+}

@@ -1,0 +1,220 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  username     String        @unique
+  password     String
+  nickname     String
+  role         String        @default("user") // user | admin
+  avatarIcon   String        @default("u1")   // 用户图标池 key，用户可自行更换
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  ratings      Rating[]
+  comments     Comment[]
+  commentLikes CommentLike[]
+  posts        Post[]
+  postLikes    PostLike[]
+}
+
+model Team {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
+  category    String     // c | 中
+  short       String
+  iconKey     String
+  color1      String
+  color2      String
+  score       Float      @default(0)
+  ratingCount Int        @default(0)
+  dist        String     @default("[0,0,0,0,0,0,0,0,0,0]") // 1-10 分各多少人
+  tags        String     @default("[]")
+  sort        Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  employees   Employee[]
+  needs       Need[]
+}
+
+model Employee {
+  id          Int      @id @default(autoincrement())
+  teamId      Int
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  name        String
+  title       String
+  iconKey     String?  // 仅管理端可设置，用户不可修改
+  color1      String
+  color2      String
+  score       Float    @default(0)
+  ratingCount Int      @default(0)
+  dist        String   @default("[0,0,0,0,0,0,0,0,0,0]")
+  sort        Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([teamId])
+}
+
+model Need {
+  id           Int      @id @default(autoincrement())
+  title        String
+  desc         String
+  category     String
+  status       String   @default("评审中") // 评审中 | 进行中 | 已完成
+  teamId       Int?
+  team         Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  proposerName String?
+  proposerId   Int?     // 用户自行发布时记录发布者；管理端录入为 null
+  images       String   @default("[]") // JSON 数组，元素为 /uploads/xxx.jpg
+  score        Float    @default(0)
+  voteCount    Int      @default(0)
+  dist         String   @default("[0,0,0,0,0,0,0,0,0,0]")
+  tags         String   @default("[]")
+  sort         Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model NeedMember {
+  id         Int    @id @default(autoincrement())
+  needId     Int
+  employeeId Int
+  role       String @default("参与") // 提议 | 负责 | 参与
+  sort       Int    @default(0)
+
+  @@unique([needId, employeeId])
+  @@index([needId])
+}
+
+model Rating {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetType String   // team | employee | need
+  targetId   Int
+  // 评分维度：''=全局（团队/员工全局分、需求自身分）；need=某个需求内的成员表现分
+  scopeType  String   @default("")
+  scopeId    Int      @default(0) // scopeType=need 时为需求 id
+  score      Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, targetType, scopeType, scopeId, targetId])
+  @@index([targetType, targetId])
+  @@index([scopeType, scopeId, targetType])
+}
+
+model Comment {
+  id         Int           @id @default(autoincrement())
+  userId     Int
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetType String
+  targetId   Int
+  // 评论维度：''=全局目标；need=需求内成员评分的短评
+  scopeType  String        @default("")
+  scopeId    Int           @default(0)
+  score      Int
+  content    String
+  likes      Int           @default(0)
+  parentId   Int?
+  parent     Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    Comment[]     @relation("CommentReplies")
+  rootId        Int?      // 所属根评论；根评论本身为 null
+  replyToUserId Int?      // 被回复的用户；根评论为 null
+  createdAt  DateTime      @default(now())
+  likesBy    CommentLike[]
+
+  @@index([targetType, targetId, parentId])
+  @@index([parentId])
+  @@index([rootId])
+}
+
+model CommentLike {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commentId Int
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+}
+
+model Post {
+  id        Int        @id @default(autoincrement())
+  userId    Int
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  images    String     @default("[]") // JSON 数组，元素为 /uploads/xxx.jpg
+  likes     Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  likesBy   PostLike[]
+
+  @@index([userId])
+  @@index([likes, createdAt])
+}
+
+model PostLike {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId Int
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+}
+
+// 通知：评论/回复被点赞、评论/回复被回复、动态被点赞、动态被评论
+model Notification {
+  id         Int      @id @default(autoincrement())
+  userId     Int      // 接收者
+  actorId    Int      // 触发者
+  actorName  String   // 昵称快照，触发者改昵称后历史通知保持原样
+  actorIcon  String   @default("u1")
+  type       String   // like_comment | reply_comment | like_post | comment_post
+  targetType String   // team | employee | need | post
+  targetId   Int      // 评论所属对象 / 动态 id
+  commentId  Int?     // 关联评论（可选）
+  preview    String   @default("")
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+}
+
+// AI 助手配置（单条记录）：名称 / 形象 / 问候语 / 快捷指令等由管理端维护，
+// 客户端通过 /api/agent/meta 拉取，换名字或形象不需要重新发版。
+model Agent {
+  id          Int      @id @default(autoincrement())
+  name        String   @default("小狮")
+  aliases     String   @default("[]") // JSON：["小狮子","良扑小狮"]
+  avatarUrl   String?  // /uploads/xxx.png|gif（管理端上传）
+  avatarEmoji String   @default("🦁")
+  intro       String   @default("")
+  persona     String   @default("") // 人设 prompt（暂未接入模型，先存配置）
+  greeting    String   @default("")
+  suggestions String   @default("[]") // 快捷指令 JSON
+  enabled     Boolean  @default(true)
+  canComment  Boolean  @default(true)
+  model       String?  // 覆盖模型名（预留）
+  temperature Float    @default(0.4)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Icon {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  kind      String   // team | employee | user
+  name      String
+  svg       String
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+}

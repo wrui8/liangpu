@@ -1,0 +1,46 @@
+# 系统 / 编辑器
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/
+
+# 分发包与构建产物
+/dist/
+dist.zip
+/build/
+.tmp-img/
+备份/
+
+# 运行时数据、数据库与证书私钥 —— 切勿入库
+/docker-data/
+/data/
+/identifier.sqlite
+/server/data/
+.env
+
+# Node
+node_modules/
+/admin/dist/
+/server/dist/
+*.log
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+/app/build/
+/app/android/local.properties
+/app/android/.gradle/
+/app/android/app/build/
+/app/android/developgradle-home/
+/app/ios/Flutter/Generated.xcconfig
+/app/ios/Flutter/flutter_export_environment.sh
+/app/ios/Flutter/ephemeral/
+/app/ios/Pods/
+/app/ios/.symlinks/
+/app/ios/Runner.xcworkspace/xcuserdata/
+/app/ios/Runner.xcodeproj/xcuserdata/
+/app/ios/Runner.xcodeproj/project.xcworkspace/xcuserdata/
+/app/windows/flutter/ephemeral/
+/app/android/build/

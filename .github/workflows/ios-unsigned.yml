@@ -1,0 +1,67 @@
+name: iOS 未签名包
+
+# 在 GitHub 的 macOS runner 上编译 iOS，产出未签名 IPA 供下载。
+# 未签名 IPA 无法直接装到未越狱设备：需用 Sideloadly / AltStore 以用户自己的
+# Apple ID 重签名，再到「设置 → 通用 → VPN与设备管理」信任描述文件。
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - '.github/workflows/ios-unsigned.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ios-unsigned-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ipa:
+    name: 构建 ipa
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: 版本信息
+        id: ver
+        run: echo "version=$(grep -m1 '^version:' app/pubspec.yaml | sed 's/version:[[:space:]]*//' | cut -d+ -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: 安装依赖
+        working-directory: app
+        run: |
+          flutter --version
+          flutter pub get
+
+      - name: 编译 iOS（无签名）
+        working-directory: app
+        run: flutter build ios --release --no-codesign
+
+      - name: 打包 ipa
+        working-directory: app
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          APP_PATH=build/ios/iphoneos/Runner.app
+          test -d "$APP_PATH"
+          STAGE=build/ios/ipa-payload
+          OUT="../liangpu-ios-${VERSION}-unsigned.ipa"
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE/Payload"
+          cp -R "$APP_PATH" "$STAGE/Payload/Runner.app"
+          # ditto 能保留符号链接与资源分叉，比 zip 更适合打 ipa
+          ditto -c -k --sequesterRsrc --keepParent "$STAGE/Payload" "$OUT"
+          ls -lh "$OUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: liangpu-ios-unsigned-${{ steps.ver.outputs.version }}
+          path: liangpu-ios-*-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30

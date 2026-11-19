@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>良扑 · 内网团队评分</title>
+<meta name="description" content="良扑——给你身边的团队和同事打分。复刻虎扑评分体系的内网应用，提供 Android 与 Windows 客户端。">
+<link rel="icon" type="image/png" href="/download/assets/logo.png">
+<meta property="og:title" content="良扑 · 内网团队评分">
+<meta property="og:description" content="1–10 分评分、亮评、动态与消息提醒。只在内网运行，数据不出局域网。">
+<style>
+:root{
+  --bg:#0a0a0b;
+  --panel:rgba(255,255,255,.034);
+  --panel-2:rgba(255,255,255,.055);
+  --line:rgba(255,255,255,.09);
+  --line-2:rgba(255,255,255,.16);
+  --text:#f5f3ef;
+  --muted:#a6a19b;
+  --dim:#77726d;
+  --gold:#f4c430;
+  --gold-hi:#ffdf74;
+  --gold-deep:#d9a413;
+  --grey:#7a7571;
+  --ok:#5fbf8a;
+  --radius:22px;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Noto Sans SC",system-ui,-apple-system,sans-serif;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+/* 细网格 + 柔光，营造纵深但不干扰阅读 */
+body::before{
+  content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask-image:radial-gradient(ellipse 94% 68% at 50% 0%,#000 26%,transparent 76%);
+  mask-image:radial-gradient(ellipse 94% 68% at 50% 0%,#000 26%,transparent 76%);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(920px 540px at 80% -10%,rgba(244,196,48,.13),transparent 62%),
+    radial-gradient(720px 460px at 4% 4%,rgba(122,117,113,.16),transparent 62%),
+    radial-gradient(900px 560px at 50% 112%,rgba(244,196,48,.06),transparent 60%);
+}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+.wrap{width:min(1140px,calc(100% - 48px));margin:0 auto}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+/* ------- 导航 ------- */
+.nav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(10,10,11,.74);
+  backdrop-filter:blur(16px) saturate(140%);
+  -webkit-backdrop-filter:blur(16px) saturate(140%);
+  border-bottom:1px solid var(--line);
+}
+.nav-inner{display:flex;align-items:center;gap:30px;height:70px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px;letter-spacing:.4px}
+.brand-mark{
+  width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+  background:rgba(244,196,48,.1);border:1px solid rgba(244,196,48,.24);
+  box-shadow:0 0 0 1px rgba(0,0,0,.4) inset,0 8px 22px rgba(244,196,48,.12);
+}
+.brand-mark img{width:26px;height:auto}
+.brand-sub{
+  font-size:10px;font-weight:700;letter-spacing:2.4px;color:var(--dim);
+  border-left:1px solid var(--line-2);padding-left:12px;line-height:1.3;
+}
+.nav-links{display:flex;gap:26px;margin-left:8px;font-size:14px;color:var(--muted)}
+.nav-links a{position:relative;padding:4px 0;transition:color .2s}
+.nav-links a::after{
+  content:"";position:absolute;left:0;right:100%;bottom:-2px;height:1.5px;
+  background:var(--gold);transition:right .25s ease;
+}
+.nav-links a:hover{color:var(--text)}
+.nav-links a:hover::after{right:0}
+.nav-cta{
+  margin-left:auto;font-size:13.5px;font-weight:800;color:#141208;
+  background:linear-gradient(135deg,var(--gold-hi),var(--gold) 45%,var(--gold-deep));
+  padding:10px 20px;border-radius:999px;white-space:nowrap;
+  box-shadow:0 8px 22px rgba(244,196,48,.22);
+  transition:transform .2s,box-shadow .2s;
+}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(244,196,48,.34)}
+
+/* ------- Hero ------- */
+.hero{position:relative;padding:80px 0 96px;overflow:hidden}
+.hero-inner{display:grid;grid-template-columns:1.12fr .88fr;gap:54px;align-items:center}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:9px;
+  font-size:11.5px;font-weight:800;letter-spacing:2.4px;color:var(--gold);
+  border:1px solid rgba(244,196,48,.3);background:rgba(244,196,48,.06);
+  padding:6px 13px;border-radius:999px;margin-bottom:24px;
+}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 0 rgba(244,196,48,.55);animation:pulse 2.4s infinite}
+.hero h1{font-size:clamp(35px,4.8vw,60px);line-height:1.16;font-weight:900;letter-spacing:-1px}
+.hero h1 .hl{
+  background:linear-gradient(105deg,var(--gold-hi),var(--gold) 48%,#c99210);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.lead{margin-top:22px;font-size:16.5px;color:var(--muted);max-width:34em}
+.hero-cta{display:flex;flex-wrap:wrap;gap:13px;margin-top:36px}
+.btn{
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  min-height:58px;padding:10px 28px;border-radius:15px;
+  font-size:15.5px;font-weight:800;line-height:1.3;text-align:center;
+  transition:transform .2s,box-shadow .2s,background .2s,border-color .2s;
+}
+.btn small{font-size:11.5px;font-weight:500;opacity:.72;letter-spacing:.2px}
+.btn.gold{
+  color:#17130a;background:linear-gradient(135deg,var(--gold-hi),var(--gold) 46%,var(--gold-deep));
+  box-shadow:0 14px 34px rgba(244,196,48,.26);
+}
+.btn.gold:hover{transform:translateY(-2px);box-shadow:0 20px 42px rgba(244,196,48,.38)}
+.btn.ghost{color:#e9e6e1;border:1px solid var(--line-2);background:rgba(255,255,255,.025)}
+.btn.ghost:hover{background:rgba(255,255,255,.06);transform:translateY(-2px)}
+.hero-meta{margin-top:20px;font-size:12.5px;color:var(--dim);display:flex;flex-wrap:wrap;gap:7px 18px}
+.hero-meta i{font-style:normal;display:inline-flex;align-items:center;gap:6px}
+.hero-meta i::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--grey)}
+
+/* ------- 手机预览 ------- */
+.hero-art{position:relative;display:flex;justify-content:center;min-height:460px}
+.orbit{
+  position:absolute;top:50%;left:50%;width:430px;height:430px;transform:translate(-50%,-50%);
+  border:1px solid rgba(244,196,48,.1);border-radius:50%;pointer-events:none;
+}
+.orbit::after{
+  content:"";position:absolute;top:-3px;left:50%;width:6px;height:6px;border-radius:50%;
+  background:var(--gold);box-shadow:0 0 14px 3px rgba(244,196,48,.5);
+}
+.orbit.small{width:310px;height:310px;border-color:rgba(255,255,255,.05)}
+.device{
+  position:relative;z-index:2;width:min(310px,100%);align-self:center;
+  border-radius:42px;padding:13px;
+  background:linear-gradient(168deg,#26262b,#121215 58%);
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 44px 90px rgba(0,0,0,.66),0 0 0 1px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.09);
+  transform:rotate(1.6deg);
+  animation:floatY 7.5s ease-in-out infinite;
+}
+.device::before{
+  content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  width:64px;height:5px;border-radius:99px;background:#000;opacity:.55;
+}
+.device-screen{background:#0e0e10;border-radius:31px;padding:30px 16px 15px;overflow:hidden}
+.device-top{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:#d8d4ce;margin-bottom:16px}
+.device-top img{width:17px;height:auto}
+.device-top .live{
+  margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:1.6px;color:var(--gold);
+  border:1px solid rgba(244,196,48,.32);border-radius:5px;padding:1px 5px;
+}
+.score-card{
+  background:linear-gradient(164deg,rgba(244,196,48,.075),rgba(255,255,255,.02) 55%);
+  border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:16px 15px;
+}
+.score-row{display:flex;align-items:flex-end;gap:13px}
+.score{
+  font-size:54px;font-weight:900;line-height:.92;letter-spacing:-2.5px;font-variant-numeric:tabular-nums;
+  background:linear-gradient(180deg,#fff,#cfcac4);-webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.score-side{padding-bottom:3px}
+.stars{color:var(--gold);font-size:12.5px;letter-spacing:2px}
+.cap{font-size:10.5px;color:var(--dim);margin-top:3px}
+.bars{display:flex;align-items:flex-end;gap:4px;height:58px;margin:14px 0 13px}
+.bars i{flex:1;border-radius:3px 3px 1px 1px;background:linear-gradient(180deg,rgba(255,223,116,.95),rgba(217,164,19,.62))}
+.bars i:first-child{background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.08))}
+.quote{font-size:11.5px;line-height:1.6;color:#cdc8c2;border-left:2px solid var(--gold);padding-left:9px}
+.quote span{display:block;margin-top:5px;font-size:10.5px;color:var(--dim)}
+.mini-btn{
+  margin-top:14px;text-align:center;font-size:12.5px;font-weight:800;color:#17130a;
+  background:linear-gradient(135deg,var(--gold-hi),var(--gold) 50%,var(--gold-deep));
+  border-radius:10px;padding:9px 0;
+}
+.device-foot{
+  display:flex;justify-content:space-around;margin-top:14px;padding-top:11px;
+  border-top:1px solid rgba(255,255,255,.06);font-size:10px;color:#5f5b56;
+}
+.device-foot .on{color:var(--gold)}
+.chip{
+  position:absolute;z-index:3;display:flex;align-items:center;gap:8px;
+  padding:9px 13px;border-radius:12px;font-size:11.5px;font-weight:700;
+  background:rgba(18,18,21,.86);border:1px solid rgba(244,196,48,.22);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:0 14px 32px rgba(0,0,0,.5);
+}
+.chip b{font-family:var(--mono);color:var(--gold);font-weight:700}
+.chip .up{color:var(--ok);font-size:10px}
+.chip-a{top:14%;right:0;animation:floatY 6s ease-in-out infinite .8s}
+.chip-b{bottom:12%;left:0;animation:floatY 6.8s ease-in-out infinite 1.6s}
+
+/* ------- 通用区块 ------- */
+section.block{padding:80px 0;position:relative}
+.section-head{max-width:660px;margin-bottom:40px}
+.section-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2.6px;color:var(--gold);
+  text-transform:uppercase;
+}
+.section-tag::before{content:"";width:18px;height:1px;background:var(--gold);opacity:.7}
+.section-head h2{font-size:clamp(26px,3vw,36px);font-weight:900;margin-top:10px;letter-spacing:-.4px}
+.section-head p{color:var(--muted);margin-top:12px;font-size:15px}
+
+/* ------- 下载 ------- */
+.download-band{padding-top:24px}
+.dl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.dl-card{
+  position:relative;display:flex;flex-direction:column;gap:18px;
+  background:linear-gradient(172deg,rgba(255,255,255,.05),rgba(255,255,255,.016) 52%);
+  border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px 24px;
+  transition:transform .28s,border-color .28s,box-shadow .28s;
+}
+.dl-card::before{
+  content:"";position:absolute;inset:0 0 auto;height:1px;border-radius:var(--radius) var(--radius) 0 0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);
+  opacity:.6;pointer-events:none;
+}
+.dl-card:hover{transform:translateY(-5px);border-color:var(--line-2);box-shadow:0 26px 56px rgba(0,0,0,.5)}
+.dl-card.hot{
+  border-color:rgba(244,196,48,.34);
+  background:
+    radial-gradient(340px 200px at 88% -20%,rgba(244,196,48,.14),transparent 70%),
+    linear-gradient(172deg,rgba(244,196,48,.07),rgba(255,255,255,.018) 58%);
+}
+.dl-card.hot:hover{border-color:rgba(244,196,48,.55);box-shadow:0 28px 60px rgba(244,196,48,.12),0 26px 56px rgba(0,0,0,.5)}
+.dl-card.off{opacity:.72}
+.dl-card.off:hover{transform:none;box-shadow:none;border-color:var(--line)}
+.dl-head{display:flex;align-items:center;gap:14px}
+.dl-ico{
+  width:46px;height:46px;border-radius:13px;display:grid;place-items:center;flex:none;
+  background:rgba(255,255,255,.045);border:1px solid var(--line);
+}
+.dl-ico svg{width:23px;height:23px;fill:none;stroke:#dcd8d2;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.dl-card.hot .dl-ico{background:rgba(244,196,48,.11);border-color:rgba(244,196,48,.3)}
+.dl-card.hot .dl-ico svg{stroke:var(--gold)}
+.dl-head h3{font-size:17px;font-weight:800;line-height:1.25}
+.dl-head p{font-size:12px;color:var(--dim);margin-top:2px}
+.dl-badge{
+  margin-left:auto;flex:none;font-size:10px;font-weight:800;letter-spacing:1.2px;
+  color:var(--gold);border:1px solid rgba(244,196,48,.36);background:rgba(244,196,48,.08);
+  border-radius:999px;padding:3px 9px;
+}
+.dl-badge.mute{color:var(--dim);border-color:var(--line-2);background:transparent}
+.dl-specs{list-style:none;display:grid;gap:8px;font-size:12.8px;padding:16px 0;border-top:1px dashed rgba(255,255,255,.09);border-bottom:1px dashed rgba(255,255,255,.09)}
+.dl-specs li{display:flex;justify-content:space-between;gap:14px}
+.dl-specs .k{color:var(--dim);flex:none}
+.dl-specs .v{color:#e6e2dc;font-weight:600;text-align:right}
+.dl-specs .v.on{color:var(--gold)}
+.dl-actions{margin-top:auto;display:flex;flex-direction:column;gap:9px}
+.dl-actions .btn{width:100%;min-height:54px;border-radius:13px;font-size:15px}
+.dl-alt{
+  font-size:11.8px;color:var(--dim);text-align:center;line-height:1.6;
+}
+.dl-alt a{color:var(--muted);text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(244,196,48,.35)}
+.dl-alt a:hover{color:var(--gold)}
+.btn.disabled{
+  color:#8d8882;border:1px dashed rgba(255,255,255,.16);background:rgba(255,255,255,.02);
+  cursor:not-allowed;font-size:14px;
+}
+.dl-foot{
+  margin-top:24px;display:flex;flex-wrap:wrap;gap:10px 26px;align-items:center;
+  background:rgba(255,255,255,.022);border:1px solid var(--line);border-radius:16px;padding:16px 22px;
+  font-size:12.8px;color:var(--muted);
+}
+.dl-foot b{color:var(--gold);font-weight:800}
+.dl-foot .sep{width:1px;height:14px;background:var(--line-2)}
+
+/* ------- 功能 ------- */
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feature{
+  position:relative;overflow:hidden;
+  background:linear-gradient(170deg,rgba(255,255,255,.045),rgba(255,255,255,.014));
+  border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px;
+  transition:transform .26s,border-color .26s,box-shadow .26s;
+}
+.feature::after{
+  content:"";position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle,rgba(244,196,48,.14),transparent 66%);
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.feature:hover{transform:translateY(-4px);border-color:var(--line-2);box-shadow:0 22px 46px rgba(0,0,0,.42)}
+.feature:hover::after{opacity:1}
+.feature .ico{
+  width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  background:rgba(244,196,48,.08);border:1px solid rgba(244,196,48,.16);
+  color:var(--gold);margin-bottom:17px;
+}
+.feature .ico svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.feature h3{font-size:15.5px;font-weight:800;margin-bottom:7px;letter-spacing:.1px}
+.feature p{font-size:13px;color:var(--muted);line-height:1.68}
+
+/* ------- 使用说明 ------- */
+.guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.guide-panel{
+  background:linear-gradient(172deg,rgba(255,255,255,.04),rgba(255,255,255,.014));
+  border:1px solid var(--line);border-radius:var(--radius);padding:26px 26px 22px;
+}
+.guide-head{display:flex;align-items:center;gap:10px;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.guide-head .tag{
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.8px;color:var(--gold);
+  border:1px solid rgba(244,196,48,.3);border-radius:6px;padding:2px 7px;
+}
+.guide-head h3{font-size:16.5px;font-weight:800}
+.guide-head .cnt{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--dim)}
+.guide-list{list-style:none;counter-reset:g}
+.guide-list li{position:relative;padding:16px 0 14px 44px;counter-increment:g;border-bottom:1px dashed rgba(255,255,255,.07)}
+.guide-list li:last-child{border-bottom:0;padding-bottom:4px}
+.guide-list li::before{
+  content:counter(g,decimal-leading-zero);
+  position:absolute;left:0;top:16px;
+  font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--gold);
+  width:28px;height:28px;border-radius:9px;display:grid;place-items:center;
+  background:rgba(244,196,48,.07);border:1px solid rgba(244,196,48,.18);
+}
+.guide-list h4{font-size:14px;font-weight:800;margin-bottom:4px}
+.guide-list p{font-size:12.8px;color:var(--muted);line-height:1.68}
+.guide-list code{
+  font-family:var(--mono);font-size:12px;color:var(--gold-hi);
+  background:rgba(244,196,48,.07);border:1px solid rgba(244,196,48,.14);
+  padding:1px 5px;border-radius:5px;word-break:break-all;
+}
+.note{
+  margin-top:22px;display:flex;gap:14px;align-items:flex-start;
+  background:rgba(244,196,48,.05);border:1px solid rgba(244,196,48,.2);border-radius:15px;padding:16px 20px;
+  font-size:13px;color:#d5cbb4;
+}
+.note b{color:var(--gold);white-space:nowrap;flex:none}
+.note code{font-family:var(--mono);font-size:12px;color:var(--gold-hi)}
+
+/* ------- FAQ ------- */
+.faq{display:grid;grid-template-columns:1fr 1fr;gap:13px;align-items:start}
+details{
+  background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:0 20px;
+  transition:border-color .2s,background .2s;
+}
+details[open]{border-color:rgba(244,196,48,.28);background:rgba(244,196,48,.035)}
+summary{
+  list-style:none;cursor:pointer;padding:17px 32px 17px 0;position:relative;
+  font-size:14px;font-weight:700;
+}
+summary::-webkit-details-marker{display:none}
+summary::after{
+  content:"";position:absolute;right:2px;top:50%;width:10px;height:10px;
+  border-right:1.6px solid var(--gold);border-bottom:1.6px solid var(--gold);
+  transform:translateY(-70%) rotate(45deg);transition:transform .22s;
+}
+details[open] summary::after{transform:translateY(-30%) rotate(225deg)}
+details p{font-size:13px;color:var(--muted);padding-bottom:18px;margin-top:-2px;line-height:1.72}
+details p code{font-family:var(--mono);font-size:12px;color:var(--gold-hi)}
+details p a{color:var(--gold);text-decoration:underline;text-underline-offset:3px}
+details p .k{font-family:var(--mono);font-size:11.5px;color:#dcd8d2;border:1px solid var(--line-2);border-radius:5px;padding:1px 6px;background:rgba(255,255,255,.05)}
+
+/* ------- 页脚 ------- */
+footer{border-top:1px solid var(--line);padding:36px 0 46px;margin-top:16px;color:var(--dim);font-size:12.5px}
+.foot-inner{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:center;justify-content:space-between}
+.foot-brand{display:flex;align-items:center;gap:10px;color:#c5c0ba;font-weight:700;font-size:13.5px}
+.foot-brand img{width:28px;height:auto;opacity:.85}
+.foot-inner a{color:var(--muted);text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.2)}
+.foot-inner a:hover{color:var(--gold)}
+
+/* ------- 动效 ------- */
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(244,196,48,.5)}70%{box-shadow:0 0 0 7px rgba(244,196,48,0)}100%{box-shadow:0 0 0 0 rgba(244,196,48,0)}}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.hero-copy > *{animation:rise .7s cubic-bezier(.22,.7,.3,1) both}
+.hero-copy > :nth-child(1){animation-delay:.03s}
+.hero-copy > :nth-child(2){animation-delay:.09s}
+.hero-copy > :nth-child(3){animation-delay:.15s}
+.hero-copy > :nth-child(4){animation-delay:.21s}
+.hero-copy > :nth-child(5){animation-delay:.27s}
+.hero-art{animation:rise .9s cubic-bezier(.22,.7,.3,1) .12s both}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+
+/* ------- 响应式 ------- */
+@media (max-width:980px){
+  .hero{padding:60px 0 76px}
+  .hero-inner{grid-template-columns:1fr;gap:52px}
+  .hero-art{order:2;min-height:440px}
+  .hero-copy{order:1}
+  .orbit{width:360px;height:360px}
+  .orbit.small{width:270px;height:270px}
+  .features{grid-template-columns:repeat(2,1fr)}
+  .dl-grid{grid-template-columns:1fr;max-width:560px;margin:0 auto}
+  .guide-grid{grid-template-columns:1fr}
+  .faq{grid-template-columns:1fr}
+  .chip-a{right:4%}
+  .chip-b{left:4%}
+}
+@media (max-width:640px){
+  .wrap{width:calc(100% - 32px)}
+  .nav-inner{height:60px;gap:12px}
+  .nav-links{display:none}
+  .nav-cta{padding:8px 15px;font-size:12.5px}
+  .brand{font-size:17px}
+  .brand-mark{width:34px;height:34px;border-radius:10px}
+  .brand-mark img{width:22px}
+  .brand-sub{display:none}
+  .hero{padding:46px 0 60px}
+  .hero-cta .btn{width:100%}
+  .hero-art{min-height:400px}
+  .orbit{display:none}
+  .features{grid-template-columns:1fr}
+  .chip-a{top:6%;right:-2px;transform:scale(.92)}
+  .chip-b{bottom:4%;left:-2px;transform:scale(.92)}
+  .dl-card,.guide-panel{padding:22px 18px}
+  .dl-foot{padding:14px 16px;gap:8px 14px}
+  .dl-foot .sep{display:none}
+  section.block{padding:58px 0}
+  .note{flex-direction:column;gap:6px}
+}
+</style>
+</head>
+<body id="top">
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark"><img src="/download/assets/logo.png" alt="良扑 logo"></span>
+      良扑
+      <span class="brand-sub">内网评分</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#download">下载</a>
+      <a href="#features">功能</a>
+      <a href="#guide">使用说明</a>
+      <a href="#faq">常见问题</a>
+    </nav>
+    <a class="nav-cta" href="#download">下载客户端</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="dot"></span>LAN ONLY · 内网专用</div>
+        <h1>给你身边的<br><span class="hl">团队和同事</span>打分</h1>
+        <p class="lead">
+          复刻虎扑评分体系：1–10 分、评分趋势、十档分布、亮评与需求广场，
+          还能发布带图动态、评论点赞与多层回复，获赞和回复会推送消息提醒。
+          只在内网运行，数据不出局域网。
+        </p>
+        <div class="hero-cta">
+          <a class="btn gold" href="#download">下载客户端<small>Android · Windows</small></a>
+          <a class="btn ghost" href="#guide">查看使用说明</a>
+        </div>
+        <div class="hero-meta">
+          <i>Android 6.0+</i>
+          <i>Windows 10 / 11</i>
+          <i>HTTPS 加密连接</i>
+          <i>登录有效期 7 天</i>
+        </div>
+      </div>
+
+      <div class="hero-art" aria-hidden="true">
+        <div class="orbit"></div>
+        <div class="orbit small"></div>
+        <div class="device">
+          <div class="device-screen">
+            <div class="device-top">
+              <img src="/download/assets/logo.png" alt="">
+              良扑
+              <span class="live">LIVE</span>
+            </div>
+            <div class="score-card">
+              <div class="score-row">
+                <div class="score num">9.2</div>
+                <div class="score-side">
+                  <div class="stars">★★★★★</div>
+                  <div class="cap num">1,284 人评分 · 本周 +0.3</div>
+                </div>
+              </div>
+              <div class="bars">
+                <i style="height:8%"></i><i style="height:14%"></i><i style="height:26%"></i>
+                <i style="height:48%"></i><i style="height:72%"></i><i style="height:96%"></i>
+                <i style="height:64%"></i><i style="height:38%"></i><i style="height:20%"></i>
+                <i style="height:10%"></i>
+              </div>
+              <div class="quote">
+                “入职手续半小时办完，资料清单提前发得很清楚。”
+                <span>—— 打工人小陈 · 9 分 · 21 赞</span>
+              </div>
+              <div class="mini-btn">我要打分</div>
+            </div>
+            <div class="device-foot">
+              <span>首页</span><span class="on">团队</span><span>动态</span><span>我的</span>
+            </div>
+          </div>
+        </div>
+        <div class="chip chip-a"><b>+0.3</b><span class="up">本周上升</span></div>
+        <div class="chip chip-b"><b>2048</b><span>条亮评</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 下载 -->
+  <section class="block download-band" id="download">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-tag">Download</div>
+        <h2>选择你的平台</h2>
+        <p>安装包由内网服务器直接提供，下载后即可离线安装。服务器地址请向运维获取，首次打开时填写。</p>
+      </div>
+
+      <div class="dl-grid">
+        <!-- Windows -->
+        <article class="dl-card">
+          <div class="dl-head">
+            <span class="dl-ico">
+              <svg viewBox="0 0 24 24"><path d="M3.5 5.6l7.4-1v6.9H3.5zM12.1 4.4l8.4-1.2v8.3h-8.4zM3.5 12.9h7.4v6.9l-7.4-1zM12.1 12.9h8.4v8.3l-8.4-1.2z"/></svg>
+            </span>
+            <div>
+              <h3>Windows</h3>
+              <p>桌面客户端</p>
+            </div>
+            <span class="dl-badge mute">免安装</span>
+          </div>
+          <ul class="dl-specs">
+            <li><span class="k">系统</span><span class="v">Windows 10 / 11 64 位</span></li>
+            <li><span class="k">大小</span><span class="v num">12.3 MB</span></li>
+            <li><span class="k">连接</span><span class="v on">HTTPS 已内置</span></li>
+          </ul>
+          <div class="dl-actions">
+            <a class="btn gold" href="/downloads/liangpu-windows-0.1.0.zip" download="良扑-Windows-0.1.0.zip">
+              下载 Windows 版
+              <small>zip · 解压后双击「良扑.exe」</small>
+            </a>
+            <div class="dl-alt">包含运行所需全部文件，请勿只拷贝 exe</div>
+          </div>
+        </article>
+
+        <!-- Android -->
+        <article class="dl-card hot">
+          <div class="dl-head">
+            <span class="dl-ico">
+              <svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.6"/><path d="M10 5.2h4"/><path d="M12 18.4h.01"/></svg>
+            </span>
+            <div>
+              <h3>Android</h3>
+              <p>手机客户端</p>
+            </div>
+            <span class="dl-badge">推荐</span>
+          </div>
+          <ul class="dl-specs">
+            <li><span class="k">系统</span><span class="v">Android 6.0 及以上</span></li>
+            <li><span class="k">大小</span><span class="v num">19.1 MB</span></li>
+            <li><span class="k">架构</span><span class="v">arm64-v8a（多数机型）</span></li>
+          </ul>
+          <div class="dl-actions">
+            <a class="btn gold" href="/downloads/liangpu-android-arm64-v8a-0.1.0.apk" download="良扑-0.1.0-arm64-v8a.apk">
+              下载 APK
+              <small>arm64-v8a · 19.1 MB</small>
+            </a>
+            <div class="dl-alt">
+              老机型 / 模拟器？<a href="/downloads/liangpu-android-0.1.0.zip" download="良扑-Android-0.1.0.zip">下载全机型包（三 ABI · 26.5 MB）</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- iOS -->
+        <article class="dl-card off">
+          <div class="dl-head">
+            <span class="dl-ico">
+              <svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 4.6h3"/><path d="M12 18.2h.01"/></svg>
+            </span>
+            <div>
+              <h3>iOS</h3>
+              <p>iPhone 客户端</p>
+            </div>
+            <span class="dl-badge mute">筹备中</span>
+          </div>
+          <ul class="dl-specs">
+            <li><span class="k">系统</span><span class="v">iOS 15+（自签安装）</span></li>
+            <li><span class="k">状态</span><span class="v">暂未开放</span></li>
+            <li><span class="k">分发</span><span class="v">企业签名 / 内部分发</span></li>
+          </ul>
+          <div class="dl-actions">
+            <span class="btn disabled">暂未开放</span>
+            <div class="dl-alt">iOS 需在 macOS 构建未签名包，用 Sideloadly 自签安装；请联系运维获取</div>
+          </div>
+        </article>
+      </div>
+
+      <div class="dl-foot">
+        <b>提示</b>
+        <span>本页为公开下载入口，手机浏览器直接打开即可，<strong>无需安装证书</strong>。</span>
+        <span class="sep"></span>
+        <span>服务器地址请向运维获取；安装 App 后首次打开会引导填写。</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 功能 -->
+  <section class="block" id="features">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-tag">Features</div>
+        <h2>和虎扑一样好用的评分体验</h2>
+        <p>团队、员工、需求都能打分，分数实时汇总，热评自动进入亮评区。</p>
+      </div>
+      <div class="features">
+        <div class="feature">
+          <div class="ico">
+            <svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 9.7l5.9-.9z"/></svg>
+          </div>
+          <h3>1–10 分评分</h3>
+          <p>一人一票，重复打分自动覆盖；团队分由团队直接评分与全部员工评分合并平均，大分数与十档分布一屏看全。</p>
+        </div>
+        <div class="feature">
+          <div class="ico">
+            <svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg>
+          </div>
+          <h3>亮评与点赞</h3>
+          <p>打分时附 100 字短评，按点赞排序的热评自动展示，最有梗的评论置顶。</p>
+        </div>
+        <div class="feature">
+          <div class="ico">
+            <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>
+          </div>
+          <h3>团队与员工</h3>
+          <p>搜索、按热度 / 高分 / 最新排序，团队详情页直接给成员逐个打分。</p>
+        </div>
+        <div class="feature">
+          <div class="ico">
+            <svg viewBox="0 0 24 24"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"/></svg>
+          </div>
+          <h3>需求广场</h3>
+          <p>按状态筛选需求，用支持度表达立场，需求详情里还能看到相关员工。</p>
+        </div>
+        <div class="feature">
+          <div class="ico">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 15l-5-5L6 20"/></svg>
+          </div>
+          <h3>动态广场与评论区</h3>
+          <p>发布文字与图片（最多 4 张），按点赞量和时间排序；每条动态都能评论，支持点赞与多层回复。</p>
+        </div>
+        <div class="feature">
+          <div class="ico">
+            <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M15 5.4a3.5 3.5 0 010 5.2M18.5 14.9c1.7.8 2.8 2.4 3 5.1"/></svg>
+          </div>
+          <h3>用户主页与消息通知</h3>
+          <p>点头像跨用户查看资料、动态与获赞数；评论/回复被赞、被回复，动态被赞或被评论时，铃铛会出现未读红点。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 使用说明 -->
+  <section class="block" id="guide">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-tag">Guide</div>
+        <h2>几步就能用上</h2>
+        <p>第一次打开可能会遇到系统安全提示，按下面的步骤操作即可。</p>
+      </div>
+
+      <div class="guide-grid">
+        <div class="guide-panel">
+          <div class="guide-head">
+            <span class="tag">ANDROID</span>
+            <h3>手机安装</h3>
+            <span class="cnt">01 — 04</span>
+          </div>
+          <ol class="guide-list">
+            <li>
+              <h4>下载 APK</h4>
+              <p>多数机型点「下载 APK」即可（arm64-v8a）；不确定机型时，下载<a href="/downloads/liangpu-android-0.1.0.zip" style="color:var(--gold)">全机型包</a>，里面三个包都带着。</p>
+            </li>
+            <li>
+              <h4>传到手机并安装</h4>
+              <p>微信文件传输、数据线或局域网共享均可。提示「未知来源应用」时选择允许后继续，需要 Android 6.0 及以上。</p>
+            </li>
+            <li>
+              <h4>填写服务器地址</h4>
+              <p>首次打开会显示「连接服务器」引导页，填写运维提供的地址，填一次后自动记住。之后可在登录页底部或「我的」页修改。</p>
+            </li>
+            <li>
+              <h4>登录使用</h4>
+              <p>需与服务器处于同一内网。App 已内置内部 CA，无需在手机上安装任何证书。</p>
+            </li>
+          </ol>
+        </div>
+
+        <div class="guide-panel">
+          <div class="guide-head">
+            <span class="tag">WINDOWS</span>
+            <h3>电脑运行</h3>
+            <span class="cnt">01 — 04</span>
+          </div>
+          <ol class="guide-list">
+            <li>
+              <h4>下载并完整解压</h4>
+              <p>下载 <code>liangpu-windows-0.1.0.zip</code>，右键「全部解压缩」。不要直接在压缩包里双击运行，也不要只把 exe 拷出来。</p>
+            </li>
+            <li>
+              <h4>双击运行</h4>
+              <p>打开解压后的文件夹，双击 <code>良扑.exe</code>。必须一起保留 <code>data</code> 文件夹和同目录全部 DLL，缺少时会弹出明确提示。</p>
+            </li>
+            <li>
+              <h4>处理安全提示</h4>
+              <p>若出现「Windows 已保护你的电脑」，点「更多信息 → 仍要运行」；来自聊天工具的文件，可先右键 zip → 属性 → 勾选「解除锁定」再解压。</p>
+            </li>
+            <li>
+              <h4>登录使用</h4>
+              <p>首次启动同样会引导填写服务器地址（请向运维获取），之后可在登录页底部或「我的 → 服务器地址」修改。</p>
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="note">
+        <b>演示账号</b>
+        <span>普通用户 <code>demo / demo123</code>；管理员账号请向部署同事索取。登录状态保留 7 天，过期后重新登录即可。</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 常见问题 -->
+  <section class="block" id="faq">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-tag">FAQ</div>
+        <h2>常见问题</h2>
+      </div>
+      <div class="faq">
+        <details open>
+          <summary>安卓手机应该下载哪个包？</summary>
+          <p>绝大多数手机下载 <strong>arm64-v8a</strong> 那个即可。老旧 32 位手机用 armeabi-v7a，安卓模拟器用 x86_64；分不清就下载「全机型包」，三个 APK 和安装说明都在里面，试其中一个能装就用它。</p>
+        </details>
+        <details>
+          <summary>iOS 版什么时候有？</summary>
+          <p>iOS 工程已就绪，但苹果只允许在 macOS + Xcode 上编译。运维在 Mac 上生成未签名 IPA 后，用 Sideloadly / AltStore 以你自己的 Apple ID 重签名即可安装（个人签名 7 天有效，到期需重新签）。在此之前，iPhone 可以用浏览器访问本页，但无法使用 App 功能。</p>
+        </details>
+        <details>
+          <summary>手机打开本页需要安装证书吗？</summary>
+          <p>不需要。本页是独立的公开下载入口，使用普通 HTTP 服务，任何手机浏览器（包括微信内置浏览器）都能直接打开并下载安装包。HTTPS 与内部 CA 只用于 App 和服务器之间的通信。</p>
+        </details>
+        <details>
+          <summary>安装 App 后提示证书校验失败？</summary>
+          <p>说明使用的是旧版安装包。请从本页重新下载最新 APK 覆盖安装，不要使用聊天记录里旧版本的文件。</p>
+        </details>
+        <details>
+          <summary>提示无法连接服务器？</summary>
+          <p>请确认设备与服务器在同一内网，并向运维确认服务器地址，检查登录页底部或「我的 → 服务器地址」是否填写正确。地址变更后需要改用新地址。</p>
+        </details>
+        <details>
+          <summary>双击「良扑.exe」后没反应？</summary>
+          <p>先确认文件夹里有没有 <code>data</code> 子文件夹。只拷贝 exe 和 DLL 时程序无法启动，会弹出「缺少 data 文件夹」提示。请重新把 zip「全部解压缩」后运行；若点击「运行」后一直无窗口，检查 360 / 火绒等安全软件是否拦截，并把整个文件夹加入信任。</p>
+        </details>
+        <details>
+          <summary>给员工打分后，团队评分会变化吗？</summary>
+          <p>会。团队分 = 团队直接评分 + 该团队全部员工评分的合并平均。给任意员工打分后，团队卡片和详情页的分数、评分人数、十档分布会立即重算；返回团队页或下拉刷新即可看到结果。</p>
+        </details>
+        <details>
+          <summary>能不能发给多台电脑使用？</summary>
+          <p>可以。把解压后的<strong>整个文件夹</strong>复制给对方即可，登录时用自己的账号。请勿只拷贝 <code>良扑.exe</code>，必须带上 <code>data</code> 文件夹和 DLL。</p>
+        </details>
+        <details>
+          <summary>登录多久会过期？</summary>
+          <p>登录状态有效期为 7 天，过期后输入账号密码重新登录即可，评分与评论都会保留。</p>
+        </details>
+        <details>
+          <summary>怎么发布动态？能看到别人的动态吗？</summary>
+          <p>登录后进入底部「动态」页，点右上角「发布」即可写文字、选图片（最多 4 张，自动压缩后上传）。平台动态按点赞量和发布时间排序；点卡片右下角「评论」可进入详情参与讨论，点任意头像可进入该用户主页查看其发布的全部动态。图片保存在内网服务器上。</p>
+        </details>
+        <details>
+          <summary>消息红点是什么意思？</summary>
+          <p>首页右上角铃铛显示未读消息数。你的评论或回复被点赞、被回复，或你发布的动态被点赞、被评论时会产生通知；自己操作自己不会通知。点开铃铛进入消息中心会自动标记已读，点击任意一条可跳转到对应详情，未读数约 30 秒自动刷新。</p>
+        </details>
+        <details>
+          <summary>怎么回复别人的回复？回车会发送吗？</summary>
+          <p>每条回复右下角也有「回复」按钮，点它即可继续回复，内容显示「A 回复 @B」，同级平铺不会越缩越窄。评论、回复弹窗与打分短评支持 <span class="k">Enter</span> 直接发送、<span class="k">Shift</span>+<span class="k">Enter</span> 换行；手机端使用键盘上的「发送」键。</p>
+        </details>
+        <details>
+          <summary>评分和评论存在哪里？</summary>
+          <p>全部保存在内网服务器的数据库中，不经过任何公网服务，抓包也看不到账号、评分、评论与动态图片。</p>
+        </details>
+        <details>
+          <summary>管理端提示「您的连接不是私密连接」怎么办？</summary>
+          <p>
+            管理后台使用内部证书，每台管理电脑首次访问需安装一次：
+            下载 <a href="/downloads/liangpu-admin-cert.zip" download="良扑-管理端证书.zip">管理端证书安装包</a>，
+            解压后双击 <code>安装证书.cmd</code>，看到「证书已安装」即可（无需管理员权限）。
+            装完完全关闭浏览器再重新打开。
+          </p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-inner">
+    <div class="foot-brand"><img src="/download/assets/logo.png" alt="">良扑 · 内网团队评分</div>
+    <div>
+      版本 0.1.0 · 仅限内网访问 · 服务器地址请向运维获取 ·
+      <a href="/downloads/liangpu-admin-cert.zip" download="良扑-管理端证书.zip">管理端证书安装包</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

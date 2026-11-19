@@ -1,0 +1,30 @@
+name: liangpu_app
+description: "良扑 · 内网团队 / 员工 / 需求评分"
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.14.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  material_ui: ^1.1.0
+  cupertino_icons: ^1.0.8
+  http: ^1.2.0
+  shared_preferences: ^2.3.0
+  flutter_svg: ^2.0.10
+  ffi: ^2.1.0
+  image_picker: ^1.1.2
+  image: ^4.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/certs/ca.pem

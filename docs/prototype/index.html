@@ -1,0 +1,2007 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>良扑 · UI 原型（团队 / 员工 / 需求）</title>
+<style>
+  /* ============ 主题变量 ============ */
+  :root {
+    --brand: #E0202D;
+    --brand-hover: #C81522;
+    --brand-soft: rgba(224, 32, 45, .08);
+    --bg: #F4F5F7;
+    --surface: #FFFFFF;
+    --surface-2: #F7F8FA;
+    --text-1: #14161A;
+    --text-2: #5F6670;
+    --text-3: #9AA1AA;
+    --line: #ECEEF1;
+    --shadow: 0 2px 12px rgba(20, 22, 26, .06);
+    --bar-bg: rgba(255, 255, 255, .92);
+    --sheet-shadow: 0 -8px 40px rgba(20, 22, 26, .14);
+    --chart-grid: #EDEFF2;
+    --star-off: #C9CFD6;
+  }
+  [data-theme="dark"] {
+    --brand: #F23441;
+    --brand-hover: #FF4A55;
+    --brand-soft: rgba(242, 52, 65, .14);
+    --bg: #0E0F11;
+    --surface: #17181C;
+    --surface-2: #1E2025;
+    --text-1: #F0F1F3;
+    --text-2: #9AA1AA;
+    --text-3: #6A717B;
+    --line: #272A30;
+    --shadow: 0 2px 12px rgba(0, 0, 0, .35);
+    --bar-bg: rgba(14, 15, 17, .92);
+    --sheet-shadow: 0 -8px 40px rgba(0, 0, 0, .55);
+    --chart-grid: #262A30;
+    --star-off: #3B4048;
+  }
+
+  /* ============ 基础 ============ */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: radial-gradient(1200px 800px at 70% -10%, #333845 0%, #101216 62%);
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    color: var(--text-1);
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  svg { display: block; }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+
+  /* ============ 手机外壳 ============ */
+  .phone {
+    position: relative;
+    width: 430px;
+    height: min(920px, calc(100vh - 48px));
+    background: var(--bg);
+    border-radius: 46px;
+    border: 1px solid rgba(255, 255, 255, .09);
+    box-shadow: 0 44px 120px rgba(0, 0, 0, .6), 0 0 0 10px rgba(0, 0, 0, .25);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: background .25s ease;
+  }
+  @media (max-width: 520px) {
+    body { padding: 0; display: block; background: var(--bg); }
+    .phone { width: 100%; height: 100dvh; border-radius: 0; border: 0; box-shadow: none; }
+  }
+
+  /* ============ 状态栏 ============ */
+  .statusbar {
+    height: 42px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 26px;
+    font-size: 13px; font-weight: 600;
+    color: var(--text-1);
+    background: var(--bg);
+    transition: background .25s;
+  }
+  .statusbar .icons { display: flex; gap: 6px; align-items: center; opacity: .9; }
+  @media (max-width: 520px) { .statusbar { display: none; } }
+
+  /* ============ 视图容器 ============ */
+  .viewport { position: relative; flex: 1; overflow: hidden; }
+  .page {
+    position: absolute; inset: 0;
+    overflow-y: auto; overflow-x: hidden;
+    background: var(--bg);
+    display: none;
+    padding-bottom: 84px;
+    transition: background .25s;
+  }
+  .page.active { display: block; }
+  .page-detail {
+    display: block; z-index: 20;
+    transform: translateX(100%);
+    transition: transform .3s cubic-bezier(.22, .8, .24, 1);
+    padding-bottom: 104px;
+    pointer-events: none;
+  }
+  .page-detail.open { transform: translateX(0); pointer-events: auto; }
+
+  /* ============ 顶栏 ============ */
+  .appbar {
+    position: sticky; top: 0; z-index: 10;
+    height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 10px 0 20px;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .page-title { font-size: 17px; font-weight: 700; letter-spacing: .2px; }
+  .logo { font-size: 22px; font-weight: 900; color: var(--brand); letter-spacing: .5px; display: flex; align-items: center; gap: 4px; }
+  .logo .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brand); margin-top: -10px; }
+  .appbar-actions { display: flex; align-items: center; gap: 2px; }
+  .icon-btn {
+    width: 40px; height: 40px;
+    display: grid; place-items: center;
+    background: none; border: none;
+    color: var(--text-1); border-radius: 50%;
+    transition: background .15s;
+  }
+  .icon-btn:active { background: var(--surface-2); }
+  .icon-btn svg { width: 21px; height: 21px; }
+
+  /* ============ 首页 ============ */
+  .chips { display: flex; gap: 8px; padding: 4px 16px 14px; overflow-x: auto; flex-shrink: 0; }
+  .chip {
+    flex-shrink: 0;
+    padding: 7px 15px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 13px; font-weight: 500;
+    transition: all .15s;
+    box-shadow: var(--shadow);
+  }
+  .chip.on { background: var(--brand); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(224, 32, 45, .3); }
+
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; padding: 10px 20px 12px; }
+  .section-head h2 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: .2px; }
+  .section-head .more { font-size: 12px; color: var(--text-3); }
+
+  .hscroll { display: flex; gap: 12px; overflow-x: auto; padding: 0 16px 18px; scroll-snap-type: x proximity; }
+  .hot-card {
+    flex-shrink: 0; width: 118px;
+    background: var(--surface);
+    border-radius: 16px; padding: 10px;
+    box-shadow: var(--shadow);
+    scroll-snap-align: start;
+    transition: transform .15s;
+  }
+  .hot-card:active { transform: scale(.97); }
+  .hot-cover {
+    position: relative; overflow: hidden;
+    height: 86px; border-radius: 11px;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+  }
+  .hot-cover .cover-icon { width: 42px; height: 42px; }
+  .hot-card:nth-child(2n) .cover-icon { animation-delay: 1.4s; }
+  .hot-card:nth-child(3n) .cover-icon { animation-delay: 2.6s; }
+  .hot-name { font-size: 13px; font-weight: 600; margin: 9px 1px 2px; }
+  .hot-score { font-size: 17px; font-weight: 800; color: var(--brand); }
+  .hot-score small { font-size: 10px; color: var(--text-3); font-weight: 500; margin-left: 2px; }
+
+  .score-card {
+    display: grid;
+    grid-template-columns: 92px 1fr auto;
+    gap: 14px; align-items: center;
+    background: var(--surface);
+    border-radius: 18px; padding: 13px;
+    margin: 0 16px 12px;
+    box-shadow: var(--shadow);
+    transition: transform .15s;
+  }
+  .score-card:active { transform: scale(.985); }
+  .cover {
+    position: relative; overflow: hidden;
+    width: 92px; height: 92px;
+    border-radius: 14px;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    user-select: none;
+  }
+  .cover::before, .hot-cover::before {
+    content: "";
+    position: absolute;
+    right: -30%; bottom: -44%;
+    width: 96%; height: 96%;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .17);
+  }
+  .cover::after, .hot-cover::after {
+    content: "";
+    position: absolute;
+    left: 13%; top: 13%;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .55);
+  }
+  .cover.sm::after { width: 5px; height: 5px; }
+  .cover-icon {
+    position: relative; z-index: 2;
+    display: block;
+    width: 46%;
+    aspect-ratio: 1;
+    color: #fff;
+    animation: coverFloat 5.5s ease-in-out infinite;
+  }
+  .cover.sm .cover-icon { width: 54%; }
+  .cover-icon svg { display: block; width: 100%; height: 100%; }
+  @keyframes coverFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+  }
+  .cover.sm { width: 56px; height: 56px; border-radius: 12px; font-size: 22px; }
+  .cover.lg { width: 74px; height: 74px; border-radius: 20px; font-size: 30px; }
+  .card-body { min-width: 0; }
+  .card-body h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .meta { font-size: 11.5px; color: var(--text-3); }
+  .card-score {
+    align-self: start; padding-top: 2px;
+    font-size: 27px; font-weight: 900;
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.5px; line-height: 1;
+    text-align: right;
+  }
+  .card-score small { display: block; font-size: 10px; color: var(--text-3); font-weight: 500; letter-spacing: 0; margin-top: 4px; text-align: right; }
+
+  .mini-dist { display: flex; align-items: flex-end; gap: 2.5px; height: 20px; margin-top: 10px; }
+  .mini-dist i {
+    flex: 1; display: block; min-height: 2px;
+    border-radius: 1.5px 1.5px 0 0;
+    background: linear-gradient(to top, var(--brand), color-mix(in srgb, var(--brand) 45%, #FFB2B8));
+  }
+
+  .foot-note { text-align: center; font-size: 11px; color: var(--text-3); padding: 18px 0 10px; }
+
+  /* ============ 团队页 ============ */
+  .search-wrap {
+    margin: 2px 16px 10px;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface);
+    border-radius: 12px; padding: 0 12px;
+    height: 42px;
+    box-shadow: var(--shadow);
+    color: var(--text-3);
+  }
+  .search-wrap svg { width: 17px; height: 17px; flex-shrink: 0; }
+  .search-wrap input { flex: 1; border: none; outline: none; background: none; font-size: 14px; color: var(--text-1); min-width: 0; }
+  .search-wrap input::placeholder { color: var(--text-3); }
+
+  .sort-row { display: flex; gap: 20px; padding: 4px 20px 8px; }
+  .sort {
+    background: none; border: none; padding: 6px 0;
+    font-size: 13.5px; color: var(--text-3); font-weight: 500;
+    position: relative;
+  }
+  .sort.on { color: var(--text-1); font-weight: 700; }
+  .sort.on::after {
+    content: ""; position: absolute; left: 50%; bottom: 0;
+    transform: translateX(-50%);
+    width: 16px; height: 3px; border-radius: 2px; background: var(--brand);
+  }
+
+  .dept-row {
+    display: flex; align-items: center; gap: 13px;
+    padding: 14px 16px;
+    margin: 0 16px 10px;
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    transition: transform .15s;
+  }
+  .dept-row:active { transform: scale(.985); }
+  .dept-info { flex: 1; min-width: 0; }
+  .dept-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+  .dept-meta { font-size: 11.5px; color: var(--text-3); }
+  .dept-row .mini-dist { max-width: 150px; height: 16px; margin-top: 7px; }
+  .dept-score {
+    font-size: 24px; font-weight: 900; color: var(--brand);
+    font-variant-numeric: tabular-nums; letter-spacing: -.5px;
+    flex-shrink: 0;
+  }
+  .dept-score small { font-size: 10px; color: var(--text-3); font-weight: 500; }
+
+  /* ============ 评分趋势卡 ============ */
+  .rate-card {
+    margin: 18px 16px 0;
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 14px 14px 12px;
+    box-shadow: var(--shadow);
+  }
+  .rate-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .rate-brand { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: var(--brand); }
+  .rate-brand .mark {
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    background: var(--brand);
+    color: #fff;
+    display: grid; place-items: center;
+    font-size: 11px; font-weight: 900;
+  }
+  .rate-tabs { display: flex; align-items: center; gap: 14px; }
+  .rate-tabs button {
+    position: relative;
+    background: none; border: none; padding: 0;
+    font-size: 12.5px; color: var(--text-3); font-weight: 500;
+  }
+  .rate-tabs button.on { color: var(--text-1); font-weight: 800; }
+  .rate-tabs button + button::before {
+    content: "";
+    position: absolute; left: -8px; top: 50%;
+    width: 1px; height: 11px; margin-top: -5.5px;
+    background: var(--line);
+  }
+  .trend-svg { display: block; width: 100%; height: auto; }
+  .chart-axis { font-size: 9px; fill: var(--text-3); font-family: inherit; }
+  .chart-value { font-size: 18px; font-weight: 900; fill: var(--text-1); font-family: inherit; }
+  .rate-dist { padding-top: 4px; }
+  .rate-dist .dist-head { margin-bottom: 8px; justify-content: flex-end; }
+  .rate-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+  .rate-now { background: none; border: none; padding: 4px 0; font-size: 12.5px; font-weight: 700; color: var(--text-2); transition: color .15s; }
+  .rate-now:hover { color: var(--brand); }
+  .star-rate { display: flex; gap: 1px; }
+  .star-rate button {
+    background: none; border: none;
+    padding: 2px 3px;
+    font-size: 22px; line-height: 1;
+    color: var(--star-off);
+    transition: color .15s, transform .15s;
+  }
+  .star-rate button:hover { color: #F5B301; transform: scale(1.12); }
+
+  /* ============ 需求页 ============ */
+  .need-card {
+    margin: 0 16px 11px;
+    padding: 15px 16px 13px;
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    transition: transform .15s;
+  }
+  .need-card:active { transform: scale(.985); }
+  .need-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .status {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 700;
+    padding: 3px 9px; border-radius: 999px;
+  }
+  .status i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .st-vote { color: #E0202D; background: rgba(224, 32, 45, .08); }
+  [data-theme="dark"] .st-vote { color: #FF5A66; background: rgba(242, 52, 65, .16); }
+  .st-doing { color: #D97A1E; background: rgba(217, 122, 30, .1); }
+  [data-theme="dark"] .st-doing { color: #F0A050; }
+  .st-done { color: #1FA97C; background: rgba(31, 169, 124, .1); }
+  [data-theme="dark"] .st-done { color: #3DD7A4; }
+  .need-cat { font-size: 10px; color: var(--text-3); }
+  .need-card h3 { margin: 0 0 6px; font-size: 15px; font-weight: 700; line-height: 1.45; }
+  .need-card p {
+    margin: 0 0 12px; font-size: 12.5px; color: var(--text-2); line-height: 1.6;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .need-foot { display: flex; align-items: center; justify-content: space-between; }
+  .need-author { font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .people-stack { display: flex; align-items: center; flex-shrink: 0; }
+  .people-stack .avatar {
+    width: 20px; height: 20px; font-size: 9px;
+    border: 2px solid var(--surface); margin-left: -6px;
+  }
+  .people-stack .avatar:first-child { margin-left: 0; }
+  .people-stack .avatar.more { background: var(--line); color: var(--text-3); font-weight: 800; }
+  .need-stat { font-size: 11px; color: var(--text-3); }
+  .need-stat b { font-size: 16px; font-weight: 900; color: var(--brand); letter-spacing: -.3px; margin-right: 1px; }
+
+  /* ============ 详情页 ============ */
+  .detail-appbar { padding: 0 6px 0 4px; }
+  .detail-appbar .back {
+    display: flex; align-items: center; gap: 2px;
+    font-size: 15px; color: var(--text-2);
+    width: auto; padding: 0 10px;
+  }
+  .detail-appbar .back svg { width: 20px; height: 20px; }
+
+  .detail-hero { display: flex; align-items: center; gap: 15px; padding: 12px 20px 4px; }
+  .detail-hero h1 { margin: 0 0 7px; font-size: 23px; font-weight: 900; letter-spacing: .2px; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    display: inline-block;
+    padding: 2.5px 8px;
+    border-radius: 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text-2);
+    font-size: 10.5px; font-weight: 500;
+  }
+  .tag.red { background: var(--brand-soft); border-color: transparent; color: var(--brand); font-weight: 600; }
+  .av-xl {
+    width: 74px; height: 74px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: grid; place-items: center;
+    font-size: 28px; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+  }
+
+  .big-score-wrap { display: flex; align-items: flex-end; gap: 16px; padding: 18px 20px 4px; }
+  .big-score {
+    font-size: 66px; font-weight: 900; line-height: .9;
+    color: var(--brand);
+    letter-spacing: -3px;
+    font-variant-numeric: tabular-nums;
+  }
+  .big-score small { font-size: 17px; font-weight: 700; letter-spacing: 0; margin-left: 3px; }
+  .score-side { padding-bottom: 5px; }
+  .big-stars { position: relative; display: inline-block; font-size: 15px; letter-spacing: 2.5px; color: var(--line); line-height: 1; }
+  .big-stars .fill { position: absolute; left: 0; top: 0; white-space: nowrap; overflow: hidden; color: var(--brand); width: var(--fill, 0%); }
+  .rank-line { margin-top: 8px; font-size: 11.5px; color: var(--brand); font-weight: 600; }
+
+  .dist {
+    margin: 18px 16px 0;
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 15px 16px 11px;
+    box-shadow: var(--shadow);
+  }
+  .dist-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .dist-head b { font-size: 13.5px; font-weight: 700; }
+  .dist-head span { font-size: 11px; color: var(--text-3); }
+  .dist-bars { display: flex; align-items: flex-end; gap: 5px; height: 108px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; min-width: 0; }
+  .bar-val { font-size: 8.5px; color: var(--text-3); margin-bottom: 3px; font-variant-numeric: tabular-nums; }
+  .bar-track { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+  .bar {
+    width: 100%;
+    border-radius: 3.5px 3.5px 2px 2px;
+    background: linear-gradient(to top, var(--brand), color-mix(in srgb, var(--brand) 40%, #FFA0A8));
+    transition: height .5s cubic-bezier(.22, .8, .24, 1);
+  }
+  .bar-label { font-size: 9.5px; color: var(--text-3); margin-top: 5px; font-variant-numeric: tabular-nums; }
+
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 20px 0; }
+  .pill {
+    padding: 6px 13px;
+    border-radius: 999px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    font-size: 12px; font-weight: 600;
+  }
+
+  .section { padding: 22px 20px 0; }
+  .section h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 16.5px; font-weight: 800; }
+  .section h2::before { content: ""; width: 3.5px; height: 15px; border-radius: 2px; background: var(--brand); }
+  .sec-head-row { display: flex; align-items: baseline; justify-content: space-between; }
+  .sec-more { font-size: 11px; color: var(--text-3); }
+
+  /* 员工网格 */
+  .emp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-top: 12px; }
+  .emp-card {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 13px 6px 11px;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    box-shadow: var(--shadow);
+    transition: transform .15s;
+  }
+  .emp-card:active { transform: scale(.96); }
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: grid; place-items: center;
+    color: #fff; font-size: 14px; font-weight: 700;
+    background: linear-gradient(135deg, var(--c1, #8E9BFF), var(--c2, #5B6CFF));
+  }
+  .emp-av { width: 42px; height: 42px; font-size: 16px; }
+  .emp-name { font-size: 12.5px; font-weight: 700; margin-top: 8px; }
+  .emp-title {
+    font-size: 9.5px; color: var(--text-3); margin-top: 2px;
+    max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .emp-score { font-size: 15px; font-weight: 900; color: var(--brand); margin-top: 6px; letter-spacing: -.3px; }
+  .emp-empty {
+    margin-top: 12px; padding: 22px 16px; text-align: center;
+    font-size: 12px; color: var(--text-3);
+    background: var(--surface); border-radius: 14px; box-shadow: var(--shadow);
+  }
+
+  .dept-link {
+    display: flex; align-items: center; gap: 12px;
+    margin-top: 12px; padding: 12px 14px;
+    background: var(--surface);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+  .dept-link .cover.sm { width: 42px; height: 42px; font-size: 17px; border-radius: 11px; }
+  .dept-link .grow { flex: 1; font-size: 14px; font-weight: 700; }
+  .dept-link .sub { font-size: 11px; color: var(--text-3); font-weight: 400; margin-top: 2px; }
+  .dept-link .chev { color: var(--text-3); font-size: 16px; }
+
+  /* 评论 */
+  .comment { display: flex; gap: 11px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .comment:last-child { border-bottom: none; }
+  .c-body { flex: 1; min-width: 0; }
+  .c-head { display: flex; align-items: center; gap: 8px; }
+  .c-head b { font-size: 13px; font-weight: 600; color: var(--text-2); }
+  .c-reply-to { font-size: 11px; font-weight: 600; color: var(--brand); }
+  .c-score { font-size: 11px; font-weight: 800; color: var(--brand); background: var(--brand-soft); padding: 1.5px 7px; border-radius: 5px; font-variant-numeric: tabular-nums; }
+  .c-body p { margin: 5px 0 7px; font-size: 14px; line-height: 1.6; color: var(--text-1); }
+  .c-foot { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-3); }
+  .like { display: flex; align-items: center; gap: 4px; color: var(--text-3); font-size: 11px; user-select: none; }
+  .like.liked { color: var(--brand); font-weight: 700; }
+  .like svg { width: 14px; height: 14px; }
+
+  /* 需求详情 */
+  .need-hero { padding: 10px 20px 0; }
+  .need-hero .status { margin-bottom: 10px; }
+  .need-hero h1 { margin: 0 0 8px; font-size: 21px; font-weight: 800; line-height: 1.42; }
+  .need-meta { font-size: 11.5px; color: var(--text-3); }
+  .need-desc-long { font-size: 14px; line-height: 1.78; color: var(--text-1); margin: 10px 0 0; }
+
+  .detail-bar {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    z-index: 26;
+    display: flex; gap: 10px; align-items: center;
+    padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+    background: var(--bar-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--line);
+  }
+  .icon-action {
+    width: 46px; height: 46px;
+    flex-shrink: 0;
+    display: grid; place-items: center;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--text-2);
+  }
+  .icon-action svg { width: 20px; height: 20px; }
+
+  .btn-primary {
+    flex: 1; height: 46px;
+    border: none; border-radius: 999px;
+    background: var(--brand); color: #fff;
+    font-size: 16px; font-weight: 800; letter-spacing: 1px;
+    box-shadow: 0 6px 18px rgba(224, 32, 45, .32);
+    transition: transform .12s, background .15s;
+  }
+  .btn-primary:active { transform: scale(.975); background: var(--brand-hover); }
+  .btn-primary.disabled { opacity: .4; pointer-events: none; }
+
+  /* ============ 动态 / 我的 ============ */
+  .empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 90px 40px; }
+  .empty-icon {
+    width: 76px; height: 76px; border-radius: 24px;
+    display: grid; place-items: center;
+    background: var(--surface); box-shadow: var(--shadow);
+    font-size: 34px; margin-bottom: 20px;
+  }
+  .empty h3 { margin: 0 0 8px; font-size: 16px; font-weight: 700; }
+  .empty p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--text-3); }
+
+  .profile-card {
+    display: flex; align-items: center; gap: 14px;
+    margin: 6px 16px 16px; padding: 20px 18px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--brand), #B5121E);
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(224, 32, 45, .3);
+    position: relative; overflow: hidden;
+  }
+  .profile-card::after {
+    content: ""; position: absolute; right: -30px; top: -40px;
+    width: 140px; height: 140px; border-radius: 50%;
+    background: rgba(255, 255, 255, .12);
+  }
+  .avatar-lg {
+    width: 54px; height: 54px; border-radius: 50%;
+    background: rgba(255, 255, 255, .22);
+    border: 2px solid rgba(255, 255, 255, .5);
+    display: grid; place-items: center;
+    font-size: 22px; font-weight: 800; flex-shrink: 0;
+  }
+  .profile-card h3 { margin: 0 0 4px; font-size: 17px; font-weight: 800; }
+  .profile-card p { margin: 0; font-size: 11.5px; opacity: .82; }
+  .badge {
+    margin-left: auto;
+    font-size: 10px; font-weight: 700;
+    padding: 4px 9px; border-radius: 999px;
+    background: rgba(255, 255, 255, .2);
+    position: relative; z-index: 1;
+  }
+
+  .menu { margin: 0 16px; background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+  .menu-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 15px 16px; font-size: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .menu-item:last-child { border-bottom: none; }
+  .menu-item .chev { color: var(--text-3); font-size: 16px; }
+  .menu-val { color: var(--text-3); font-size: 12px; display: flex; align-items: center; gap: 4px; }
+  .menu-label { padding: 22px 20px 10px; font-size: 13px; font-weight: 700; color: var(--text-2); }
+
+  .switch { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+  .switch input { display: none; }
+  .switch i { position: absolute; inset: 0; border-radius: 999px; background: var(--line); transition: background .2s; }
+  .switch i::after {
+    content: ""; position: absolute; top: 3px; left: 3px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #fff; box-shadow: 0 2px 5px rgba(0, 0, 0, .2);
+    transition: transform .2s;
+  }
+  .switch input:checked + i { background: var(--brand); }
+  .switch input:checked + i::after { transform: translateX(18px); }
+
+  .my-rating {
+    display: flex; align-items: center; gap: 12px;
+    margin: 0 16px 10px; padding: 13px 16px;
+    background: var(--surface); border-radius: 14px;
+    box-shadow: var(--shadow);
+    font-size: 14px;
+  }
+  .my-rating .cover.sm { width: 40px; height: 40px; border-radius: 10px; font-size: 16px; }
+  .my-rating .grow { flex: 1; }
+  .my-rating .sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+  .my-rating .val { font-size: 19px; font-weight: 900; color: var(--brand); }
+
+  /* ============ 动态 ============ */
+  .publish-btn {
+    border: none; border-radius: 999px; padding: 7px 14px;
+    font-size: 12px; font-weight: 700; color: #fff;
+    background: var(--brand); margin-right: 4px;
+  }
+  .moments-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 20px 10px;
+    font-size: 11.5px; color: var(--text-3);
+  }
+  .moments-head b { font-size: 15px; font-weight: 800; color: var(--text-1); }
+  .moments-head b::before {
+    content: ""; display: inline-block; width: 3.5px; height: 13px;
+    border-radius: 2px; background: var(--brand);
+    margin-right: 8px; vertical-align: -1px;
+  }
+  .post-card {
+    margin: 0 16px 12px; padding: 16px;
+    background: var(--surface); border-radius: 18px;
+    box-shadow: var(--shadow);
+  }
+  .post-head { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; }
+  .post-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: grid; place-items: center; flex-shrink: 0;
+    font-size: 14px; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, #FFB300, #FF6D00);
+  }
+  .post-avatar.a2 { background: linear-gradient(135deg, #5B6CFF, #9B5CFF); }
+  .post-avatar.a3 { background: linear-gradient(135deg, #26C6A6, #0E9F6E); }
+  .post-avatar.a4 { background: linear-gradient(135deg, #FF6B81, #C2185B); }
+  .post-user { flex: 1; min-width: 0; }
+  .post-user h4 { margin: 0; font-size: 14px; font-weight: 700; }
+  .post-user span { font-size: 11px; color: var(--text-3); }
+  .post-text { font-size: 14px; line-height: 1.65; color: var(--text-1); white-space: pre-line; }
+  .post-imgs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
+  .post-imgs i {
+    display: block; aspect-ratio: 1; border-radius: 10px;
+    background: linear-gradient(135deg, #5B6CFF, #9B5CFF);
+  }
+  .post-imgs i:nth-child(2) { background: linear-gradient(135deg, #FFB300, #FF6D00); }
+  .post-imgs i:nth-child(3) { background: linear-gradient(135deg, #26C6A6, #0E9F6E); }
+  .post-foot { display: flex; align-items: center; gap: 18px; margin-top: 14px; font-size: 12px; color: var(--text-3); }
+  .post-foot .liked { color: var(--brand); font-weight: 700; }
+  .post-foot .grow { flex: 1; }
+
+  /* ============ 底部 Tab ============ */
+  .tabbar {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    z-index: 30;
+    height: calc(64px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    display: flex;
+    background: var(--bar-bg);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid var(--line);
+    transition: transform .3s cubic-bezier(.22, .8, .24, 1), opacity .25s;
+  }
+  .tabbar.hide { transform: translateY(105%); opacity: 0; pointer-events: none; }
+  .tab {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 3px;
+    border: none; background: none;
+    color: var(--text-3);
+    font-size: 10px; font-weight: 600;
+    padding-top: 6px;
+    transition: color .15s;
+  }
+  .tab svg { width: 22px; height: 22px; }
+  .tab.on { color: var(--brand); }
+
+  /* ============ 打分弹层 ============ */
+  .overlay {
+    position: absolute; inset: 0; z-index: 40;
+    background: rgba(0, 0, 0, .48);
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+
+  .sheet {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    z-index: 45;
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    box-shadow: var(--sheet-shadow);
+    padding: 8px 20px calc(20px + env(safe-area-inset-bottom));
+    transform: translateY(105%);
+    transition: transform .32s cubic-bezier(.22, .8, .24, 1);
+  }
+  .sheet.show { transform: translateY(0); }
+  .sheet-grip { width: 38px; height: 4px; border-radius: 2px; background: var(--line); margin: 4px auto 14px; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 10px; }
+  .sheet-head h3 { margin: 0; font-size: 16px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sheet-head h3 span { color: var(--brand); }
+  .sheet-close {
+    width: 30px; height: 30px; flex-shrink: 0;
+    border-radius: 50%; border: none;
+    background: var(--surface-2); color: var(--text-2);
+    font-size: 16px; display: grid; place-items: center;
+  }
+
+  .score-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; }
+  .score-grid button {
+    height: 47px; border-radius: 13px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--text-1);
+    font-size: 18px; font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    transition: all .15s;
+  }
+  .score-grid button.on {
+    background: var(--brand); border-color: var(--brand); color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 7px 16px rgba(224, 32, 45, .35);
+  }
+  .score-hint { text-align: center; font-size: 12.5px; color: var(--text-3); margin: 13px 0 4px; min-height: 18px; }
+  .score-hint b { color: var(--brand); }
+
+  .comment-input-wrap { position: relative; margin-top: 10px; }
+  .comment-input-wrap textarea {
+    width: 100%; min-height: 86px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--text-1);
+    padding: 12px 14px 26px;
+    font-size: 14px; line-height: 1.6;
+    font-family: inherit;
+    resize: none; outline: none;
+    transition: border-color .15s;
+  }
+  .comment-input-wrap textarea:focus { border-color: var(--brand); }
+  .comment-input-wrap textarea::placeholder { color: var(--text-3); }
+  .char-count { position: absolute; right: 12px; bottom: 9px; font-size: 10.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .sheet .btn-primary { margin-top: 14px; width: 100%; }
+
+  /* ============ Toast ============ */
+  .toast {
+    position: absolute; left: 50%; bottom: 120px;
+    transform: translate(-50%, 14px);
+    z-index: 60;
+    background: rgba(22, 24, 28, .92);
+    color: #fff; font-size: 13px; font-weight: 500;
+    padding: 11px 20px; border-radius: 999px;
+    opacity: 0; pointer-events: none;
+    transition: all .28s cubic-bezier(.22, .8, .24, 1);
+    white-space: nowrap;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .3);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- 状态栏（桌面预览） -->
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M1 9.5h2V12H1zM5 7h2v5H5zM9 4h2v8H9zM13 .5h2V12h-2z"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 1.2c2.5 0 4.8 1 6.5 2.6l-1.4 1.4A7.3 7.3 0 0 0 8 3.2c-2 0-3.8.8-5.1 2L1.5 3.8A9.3 9.3 0 0 1 8 1.2zm0 3.5c1.6 0 3 .6 4.1 1.6l-1.4 1.4A3.8 3.8 0 0 0 8 6.7c-1 0-2 .4-2.7 1L3.9 6.3A5.8 5.8 0 0 1 8 4.7zm0 3.4c.7 0 1.3.3 1.8.8L8 11.4 6.2 8.9c.5-.5 1.1-.8 1.8-.8z"/></svg>
+      <span style="width:22px;height:11px;border:1.5px solid currentColor;border-radius:3px;display:inline-block;position:relative"><i style="position:absolute;inset:2px 6px 2px 2px;background:currentColor;border-radius:1px"></i></span>
+    </span>
+  </div>
+
+  <div class="viewport">
+
+    <!-- ================= 首页 ================= -->
+    <section class="page active" data-page="home" id="page-home">
+      <header class="appbar">
+        <div class="logo">良扑<span class="dot"></span></div>
+        <div class="appbar-actions">
+          <button class="icon-btn" id="themeBtnHome" onclick="toggleTheme()" aria-label="切换主题"></button>
+          <button class="icon-btn" aria-label="搜索">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="chips" id="homeChips">
+        <button class="chip on">全部</button>
+        <button class="chip">c</button>
+        <button class="chip">中</button>
+      </div>
+
+      <div class="section-head">
+        <h2>今日热门</h2>
+        <span class="more">实时热度 ›</span>
+      </div>
+      <div class="hscroll" id="hotRow"></div>
+
+      <div class="section-head">
+        <h2>团队评分</h2>
+        <span class="more" id="homeCount">共 12 个团队</span>
+      </div>
+      <div id="homeList"></div>
+
+      <div class="foot-note">内网访问 · 良扑 v0.1 UI 原型</div>
+    </section>
+
+    <!-- ================= 团队 ================= -->
+    <section class="page" data-page="dept" id="page-dept">
+      <header class="appbar">
+        <div class="page-title">团队评分</div>
+        <div class="appbar-actions">
+          <button class="icon-btn theme-btn" onclick="toggleTheme()" aria-label="切换主题"></button>
+        </div>
+      </header>
+
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+        <input placeholder="搜索团队或员工" />
+      </div>
+
+      <div class="sort-row">
+        <button class="sort on">热度</button>
+        <button class="sort">高分</button>
+        <button class="sort">最新</button>
+      </div>
+
+      <div id="deptList"></div>
+      <div class="foot-note">共 12 个团队 · 数据每 30 分钟更新</div>
+    </section>
+
+    <!-- ================= 需求 ================= -->
+    <section class="page" data-page="needs" id="page-needs">
+      <header class="appbar">
+        <div class="page-title">需求广场</div>
+        <div class="appbar-actions">
+          <button class="icon-btn theme-btn" onclick="toggleTheme()" aria-label="切换主题"></button>
+          <button class="icon-btn" onclick="toast('发布需求功能开发中')" aria-label="发布需求">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="chips" id="needChips">
+        <button class="chip on">全部</button>
+        <button class="chip">评审中</button>
+        <button class="chip">进行中</button>
+        <button class="chip">已完成</button>
+      </div>
+
+      <div class="section-head" style="padding-top:0">
+        <h2>大家的想法</h2>
+        <span class="more">按支持度排序</span>
+      </div>
+      <div id="needList"></div>
+      <div class="foot-note">支持度由全员打分决定 · 得分越高的需求越优先</div>
+    </section>
+
+    <!-- ================= 动态 ================= -->
+    <section class="page" data-page="moments" id="page-moments">
+      <header class="appbar">
+        <div class="page-title">动态</div>
+        <div class="appbar-actions">
+          <button class="icon-btn theme-btn" onclick="toggleTheme()" aria-label="切换主题"></button>
+          <button class="publish-btn" onclick="toast('原型演示：发布动态请使用 App')">＋ 发布</button>
+        </div>
+      </header>
+
+      <div class="moments-head"><b>平台动态</b><span>按点赞量与发布时间排序</span></div>
+
+      <div class="post-card">
+        <div class="post-head">
+          <div class="post-avatar">JR</div>
+          <div class="post-user"><h4>JR_9527</h4><span>4 小时前 · 平台动态</span></div>
+        </div>
+        <div class="post-text">良扑上线啦！给身边的团队和同事打分，也能在这里发动态。
+今天先给「小狮达」打了个 9 分，迭代速度是真的快。</div>
+        <div class="post-imgs"><i></i><i></i></div>
+        <div class="post-foot"><span class="liked">❤ 26</span><span>💬 3</span><span class="grow"></span><span>点头像看主页</span></div>
+      </div>
+
+      <div class="post-card">
+        <div class="post-head">
+          <div class="post-avatar a2">夜</div>
+          <div class="post-user"><h4>夜跑的风</h4><span>14 小时前 · 平台动态</span></div>
+        </div>
+        <div class="post-text">需求广场里那条「首页加载优化」支持度已经冲到前面了，
+大家的票真的有用，期待下个版本。</div>
+        <div class="post-foot"><span>♡ 18</span><span>💬 1</span><span class="grow"></span><span>点头像看主页</span></div>
+      </div>
+
+      <div class="post-card">
+        <div class="post-head">
+          <div class="post-avatar a3">橘</div>
+          <div class="post-user"><h4>一只小橘</h4><span>昨天 · 平台动态</span></div>
+        </div>
+        <div class="post-text">中午在茶水间听到好几个同事在聊良扑的亮评，
+比想象中热闹，记得理性打分、友善发言。</div>
+        <div class="post-foot"><span>♡ 9</span><span>💬 0</span><span class="grow"></span><span>点头像看主页</span></div>
+      </div>
+
+      <div class="post-card">
+        <div class="post-head">
+          <div class="post-avatar a4">陈</div>
+          <div class="post-user"><h4>打工人小陈</h4><span>2 天前 · 平台动态</span></div>
+        </div>
+        <div class="post-text">第一次发动态，打个卡。
+把团建照片发上来了，以后会常来。</div>
+        <div class="post-imgs"><i></i><i></i><i></i></div>
+        <div class="post-foot"><span>♡ 4</span><span>💬 2</span><span class="grow"></span><span>点头像看主页</span></div>
+      </div>
+
+      <div class="foot-note">动态按热度排序 · 点击头像可查看该用户主页</div>
+    </section>
+
+    <!-- ================= 我的 ================= -->
+    <section class="page" data-page="me" id="page-me">
+      <header class="appbar">
+        <div class="page-title">我的</div>
+        <div class="appbar-actions">
+          <button class="icon-btn theme-btn" onclick="toggleTheme()" aria-label="切换主题"></button>
+        </div>
+      </header>
+
+      <div class="profile-card">
+        <div class="avatar-lg">Z</div>
+        <div>
+          <h3>JR_9527</h3>
+          <p>已评 3 个团队 · 收到 12 个赞</p>
+        </div>
+        <span class="badge">正式员工</span>
+      </div>
+
+      <div class="menu">
+        <div class="menu-item">
+          <span>深色模式</span>
+          <label class="switch">
+            <input type="checkbox" id="themeSwitch" onchange="toggleTheme()" />
+            <i></i>
+          </label>
+        </div>
+        <div class="menu-item">
+          <span>服务器地址</span>
+          <span class="menu-val">请向运维获取 ›</span>
+        </div>
+        <div class="menu-item">
+          <span>我的评分</span>
+          <span class="chev">›</span>
+        </div>
+        <div class="menu-item">
+          <span>关于良扑</span>
+          <span class="chev">›</span>
+        </div>
+      </div>
+
+      <div class="menu-label">我的评分</div>
+      <div class="my-rating">
+        <div class="cover sm" style="--c1:#5B6CFF;--c2:#9B5CFF" data-icon="fe"></div>
+        <div class="grow">
+          <div>前端</div>
+          <div class="sub">3 天前 · 收到 8 个赞</div>
+        </div>
+        <div class="val">9</div>
+      </div>
+      <div class="my-rating">
+        <div class="cover sm" style="--c1:#5B6CFF;--c2:#8E4DFF" data-icon="order"></div>
+        <div class="grow">
+          <div>订单中心</div>
+          <div class="sub">上周 · 收到 4 个赞</div>
+        </div>
+        <div class="val">10</div>
+      </div>
+      <div class="my-rating">
+        <div class="cover sm" style="--c1:#FFB300;--c2:#FF6D00" data-icon="flash"></div>
+        <div class="grow">
+          <div>闪购</div>
+          <div class="sub">上月 · 未获赞</div>
+        </div>
+        <div class="val">7</div>
+      </div>
+    </section>
+
+    <!-- ================= 详情 ================= -->
+    <section class="page page-detail" id="page-detail">
+      <header class="appbar detail-appbar">
+        <button class="icon-btn back" onclick="goBack()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          返回
+        </button>
+        <div class="page-title" id="detailTitle"></div>
+        <button class="icon-btn" aria-label="更多">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+      </header>
+
+      <div id="detailContent"></div>
+
+      <div class="detail-bar">
+        <button class="icon-action" onclick="toast('已复制分享链接')" aria-label="分享">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+        </button>
+        <button class="btn-primary" id="rateBtn" onclick="openSheet()">我要打分</button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ================= 底部 Tab ================= -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tab on" data-tab="home" onclick="switchTab('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.8 12 3l9 7.8V20a1 1 0 0 1-1 1h-5v-6.5H9V21H4a1 1 0 0 1-1-1z"/></svg>
+      首页
+    </button>
+    <button class="tab" data-tab="dept" onclick="switchTab('dept')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v16"/><path d="M11 9h6a1 1 0 0 1 1 1v11"/><path d="M2.5 21h19"/><path d="M7 8h1M7 12h1M7 16h1M14 13h1M14 17h1"/></svg>
+      团队
+    </button>
+    <button class="tab" data-tab="needs" onclick="switchTab('needs')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><path d="M8 6H6a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-2"/><path d="M9 12h6M9 16h4"/></svg>
+      需求
+    </button>
+    <button class="tab" data-tab="moments" onclick="switchTab('moments')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8 8 0 0 1-8 8H6l-3 2.5V11.5a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01"/></svg>
+      动态
+    </button>
+    <button class="tab" data-tab="me" onclick="switchTab('me')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c0-4 3.4-6.5 7.5-6.5s7.5 2.5 7.5 6.5"/></svg>
+      我的
+    </button>
+  </nav>
+
+  <!-- ================= 打分弹层 ================= -->
+  <div class="overlay" id="overlay" onclick="closeSheet()"></div>
+  <div class="sheet" id="sheet">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <h3 id="sheetTitle">打分</h3>
+      <button class="sheet-close" onclick="closeSheet()">✕</button>
+    </div>
+
+    <div class="score-grid" id="scoreGrid">
+      <button onclick="pickScore(1)">1</button>
+      <button onclick="pickScore(2)">2</button>
+      <button onclick="pickScore(3)">3</button>
+      <button onclick="pickScore(4)">4</button>
+      <button onclick="pickScore(5)">5</button>
+      <button onclick="pickScore(6)">6</button>
+      <button onclick="pickScore(7)">7</button>
+      <button onclick="pickScore(8)">8</button>
+      <button onclick="pickScore(9)">9</button>
+      <button onclick="pickScore(10)">10</button>
+    </div>
+    <div class="score-hint" id="scoreHint">点击分数开始评分</div>
+
+    <div class="comment-input-wrap">
+      <textarea id="commentInput" maxlength="100" placeholder="说说你的评价（选填）" oninput="onCommentInput()"></textarea>
+      <span class="char-count" id="charCount">0/100</span>
+    </div>
+
+    <button class="btn-primary disabled" id="submitBtn" onclick="submitRating()">提交评分</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ==================== 数据 ==================== */
+const ICONS = {
+  xsd: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17.5 3 8l5 3.8L12 5l4 6.8L21 8l-1 9.5z"/><path d="M4 20h16"/></svg>',
+  xsf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+  order: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M4 7.5 12 12l8-4.5"/><path d="M12 12v9"/></svg>',
+  hr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 20c0-3 2.4-5 5.5-5s5.5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.3"/><path d="M16 20c.2-2.3 1.6-3.8 3.9-3.8.6 0 1.2.1 1.7.3"/></svg>',
+  jian: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v6c0 4.4 3 7.4 7 9 4-1.6 7-4.6 7-9V6l-7-3z"/><path d="m9 12 2 2 4-4"/></svg>',
+  ai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5.5 5.5 7 7M17 17l1.5 1.5M18.5 5.5 17 7M7 17l-1.5 1.5"/></svg>',
+  test: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10 3v6.4L5.8 17a2.4 2.4 0 0 0 2.1 3.4h8.2a2.4 2.4 0 0 0 2.1-3.4L14 9.4V3"/><path d="M7.5 15h9"/></svg>',
+  fe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8.5 8.5-4 3.5 4 3.5"/><path d="m15.5 8.5 4 3.5-4 3.5"/><path d="M13.5 5 10.5 19"/></svg>',
+  arch: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg>',
+  flash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.5H11L9.5 22 19 10.5h-6.5L13 2z"/></svg>',
+  dw: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.66 3.58 3 8 3s8-1.34 8-3v-13"/><path d="M20 11.5c0 1.66-3.58 3-8 3s-8-1.34-8-3"/></svg>',
+  ls: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>',
+};
+
+function makeEmp(id, name, title, score, count) {
+  const dist = score >= 8.5 ? [1, 1, 1, 2, 3, 4, 8, 20, 27, 33]
+    : score >= 7.5 ? [2, 2, 3, 5, 8, 12, 20, 22, 16, 10]
+    : [4, 4, 6, 8, 12, 16, 20, 16, 9, 5];
+  return {
+    id, name, title,
+    short: name.slice(0, 1),
+    score, count, dist,
+    tags: ['配合顺畅', '响应及时', '专业可靠'],
+    comments: [
+      { user: '同团队·老周', score: Math.min(10, Math.round(score)), text: '沟通很顺畅，交代的事情总能按时交付。', likes: 12, time: '2 天前' },
+      { user: '协作团队·小夏', score: Math.max(6, Math.round(score) - 1), text: '遇到问题愿意主动帮忙，就是有时候太忙约不到人。', likes: 6, time: '4 天前' },
+    ],
+  };
+}
+
+const DEPTS = [
+  {
+    id: 'xsd', name: '小狮达', type: 'c', short: '狮', icon: ICONS.xsd,
+    c1: '#F5A623', c2: '#F76B1C', score: 8.7, count: 96,
+    dist: [1, 1, 1, 2, 3, 5, 10, 20, 27, 30],
+    tags: ['体验好', '迭代快', '沟通顺畅'],
+    comments: [
+      { user: '夜跑的风', score: 10, text: '需求响应特别快，小版本一周一个，体验越来越顺。', likes: 36, time: '2 小时前' },
+      { user: '一只小橘', score: 9, text: '产品设计很细腻，细节能感觉到是用心打磨过的。', likes: 21, time: '6 小时前' },
+      { user: '可乐不加冰', score: 8, text: '整体不错，就是文档偶尔更新不及时。', likes: 11, time: '昨天' },
+      { user: '一只小橘', score: 9, text: '同感，上周提的两个小问题第二天就修了。', likes: 4, time: '1 小时前', replyTo: '夜跑的风' },
+    ],
+    employees: [
+      makeEmp('xsd1', '米威', '产品负责人', 9.0, 26),
+      makeEmp('xsd2', '顺风尧', '产品经理', 8.8, 21),
+      makeEmp('xsd3', '京涛', '交互设计', 8.7, 18),
+      makeEmp('xsd4', '河马锋', '视觉设计', 8.6, 16),
+      makeEmp('xsd5', '粤涛', '用户研究', 8.5, 14),
+      makeEmp('xsd6', '慈闻', '数据分析', 8.4, 13),
+      makeEmp('xsd7', '大0子', '运营', 8.3, 12),
+      makeEmp('xsd8', '大帅兄', '市场', 8.2, 11),
+      makeEmp('xsd9', '蛋', '产品助理', 8.1, 9),
+    ],
+  },
+  {
+    id: 'xsf', name: '小师富', type: 'c', short: '师', icon: ICONS.xsf,
+    c1: '#2BC48A', c2: '#0EA679', score: 8.4, count: 78,
+    dist: [1, 1, 2, 2, 4, 7, 14, 24, 25, 20],
+    tags: ['专业', '响应及时', '方案清晰'],
+    comments: [
+      { user: '打工人小陈', score: 9, text: '疑难问题找到小师富团队，基本都能给出可落地的方案。', likes: 24, time: '3 小时前' },
+      { user: '木木夕', score: 8, text: '专业没得说，预约高峰期要排队久一点。', likes: 9, time: '昨天' },
+    ],
+    employees: [
+      makeEmp('xsf1', '夜露', '产品经理', 8.6, 15),
+    ],
+  },
+  {
+    id: 'order', name: '订单中心', type: '中', short: '单', icon: ICONS.order,
+    c1: '#5B6CFF', c2: '#8E4DFF', score: 8.1, count: 112,
+    dist: [2, 2, 3, 4, 6, 10, 18, 24, 18, 13],
+    tags: ['稳定', '处理快', '抗压强'],
+    comments: [
+      { user: '橙子汽水', score: 9, text: '大促期间订单零丢失，当天全部处理完，稳。', likes: 33, time: '1 小时前' },
+      { user: '大熊', score: 8, text: '异常订单跟进及时，月底对账稍微慢一点。', likes: 14, time: '5 小时前' },
+    ],
+    employees: [
+      makeEmp('or1', '劳模德', '订单主管', 8.4, 22),
+      makeEmp('or2', '芒柠锋', '订单专员', 8.1, 18),
+    ],
+  },
+  {
+    id: 'hr', name: 'HR', type: '中', short: 'H', icon: ICONS.hr,
+    c1: '#FF6B8B', c2: '#E64367', score: 8.3, count: 65,
+    dist: [1, 1, 2, 2, 4, 7, 15, 24, 25, 19],
+    tags: ['流程规范', '态度友好', '效率不错'],
+    comments: [
+      { user: '打工人小陈', score: 9, text: '入职手续半小时办完，资料清单提前发得很清楚。', likes: 21, time: '3 小时前' },
+      { user: '摸鱼专家', score: 8, text: '社保公积金问题回复及时，就是座机经常占线。', likes: 12, time: '昨天' },
+    ],
+    employees: [
+      makeEmp('hr1', '伟妈', '招聘主管', 8.5, 16),
+      makeEmp('hr2', '早上下雨', 'HRBP', 8.2, 12),
+    ],
+  },
+  {
+    id: 'jian', name: '监', type: '中', short: '监', icon: ICONS.jian,
+    c1: '#12B5CB', c2: '#3B6DF0', score: 7.8, count: 54,
+    dist: [2, 2, 3, 5, 8, 12, 20, 22, 16, 10],
+    tags: ['严谨', '合规', '原则性强'],
+    comments: [
+      { user: '北方的狼', score: 8, text: '抽查反馈很专业，问题定位准，给出的整改建议也清楚。', likes: 10, time: '4 小时前' },
+      { user: '一只小橘', score: 7, text: '流程有点严格，但想想也是应该的。', likes: 7, time: '2 天前' },
+    ],
+    employees: [
+      makeEmp('j1', '问滔', '风控专员', 7.9, 14),
+    ],
+  },
+  {
+    id: 'ai', name: 'ai', type: '中', short: 'A', icon: ICONS.ai,
+    c1: '#7C4DFF', c2: '#00B8D4', score: 8.9, count: 140,
+    dist: [1, 0, 1, 1, 2, 4, 9, 19, 30, 33],
+    tags: ['能力强', '落地快', '文档完善'],
+    comments: [
+      { user: '可乐不加冰', score: 10, text: '接入不到两周就跑通了业务场景，效果立竿见影。', likes: 49, time: '1 小时前' },
+      { user: '夜跑的风', score: 9, text: '技术分享做得很好，普通同事也能听懂并上手。', likes: 27, time: '4 小时前' },
+      { user: '赵敏', score: 8, text: '算力紧张的时候排队有点久，其他都好。', likes: 13, time: '昨天' },
+    ],
+    employees: [
+      makeEmp('ai1', '一手遮天张', 'AI 负责人', 9.0, 28),
+      makeEmp('ai2', '空气黄', '算法工程师', 8.8, 23),
+    ],
+  },
+  {
+    id: 'test', name: '测试', type: '中', short: '测', icon: ICONS.test,
+    c1: '#22C1C3', c2: '#0B8FA8', score: 7.9, count: 88,
+    dist: [2, 2, 3, 5, 7, 12, 19, 23, 17, 10],
+    tags: ['把关严', '用例全', '反馈快'],
+    comments: [
+      { user: '大熊', score: 9, text: '上线前拦下好几个边界问题，找测试就图个安心。', likes: 25, time: '2 小时前' },
+      { user: '一只小橘', score: 7, text: '执着是好事，但有时候卡得太细影响发布节奏。', likes: 12, time: '昨天' },
+    ],
+    employees: [
+      makeEmp('ts1', '尾灯习', '测试主管', 8.0, 20),
+      makeEmp('ts2', '围巾', '测试工程师', 7.8, 18),
+    ],
+  },
+  {
+    id: 'fe', name: '前端', type: '中', short: '前', icon: ICONS.fe,
+    c1: '#5B6CFF', c2: '#9B5CFF', score: 8.6, count: 128,
+    dist: [1, 1, 1, 2, 3, 5, 9, 18, 27, 33],
+    tags: ['还原度高', '响应快', '体验细腻'],
+    comments: [
+      { user: '夜跑的风', score: 10, text: '设计稿还原度很高，动效做得流畅，用户反馈不错。', likes: 42, time: '2 小时前' },
+      { user: '可乐不加冰', score: 9, text: '兼容性问题当天修，联调配合很默契。', likes: 28, time: '5 小时前' },
+    ],
+    employees: [
+      makeEmp('fe1', '皮皮', '前端负责人', 8.7, 24),
+      makeEmp('fe2', '三三', '前端工程师', 8.4, 19),
+    ],
+  },
+  {
+    id: 'arch', name: '架构', type: '中', short: '架', icon: ICONS.arch,
+    c1: '#5A6B8C', c2: '#35415C', score: 8.5, count: 73,
+    dist: [1, 1, 1, 2, 4, 6, 11, 21, 27, 26],
+    tags: ['方案扎实', '视野高', '文档清晰'],
+    comments: [
+      { user: '北方的狼', score: 9, text: '架构评审把潜在坑都提前讲了，避开了不少返工。', likes: 19, time: '3 小时前' },
+      { user: '木木夕', score: 8, text: '方案很稳，就是有时追求完美导致评审周期偏长。', likes: 8, time: '2 天前' },
+    ],
+    employees: [
+      makeEmp('ar1', '良强', '首席架构师', 8.8, 22),
+      makeEmp('ar2', '祁连浩', '架构师', 8.6, 18),
+      makeEmp('ar3', '企鹅王', '基础架构', 8.4, 14),
+    ],
+  },
+  {
+    id: 'flash', name: '闪购', type: 'c', short: '闪', icon: ICONS.flash,
+    c1: '#FFB300', c2: '#FF6D00', score: 8.8, count: 154,
+    dist: [1, 0, 1, 1, 2, 4, 8, 19, 29, 35],
+    tags: ['爆发力强', '选品好', '活动多'],
+    comments: [
+      { user: '橙子汽水', score: 10, text: '这次闪购活动的节奏铺得特别好，爆品一个接一个。', likes: 46, time: '1 小时前' },
+      { user: '一只小橘', score: 9, text: '选品越来越准，同事群里天天有人晒单。', likes: 23, time: '3 小时前' },
+    ],
+    employees: [
+      makeEmp('fl1', '积木曾', '闪购负责人', 8.9, 30),
+      makeEmp('fl2', '犯错明', '运营经理', 8.7, 25),
+      makeEmp('fl3', '坑哥', '活动策划', 8.5, 20),
+    ],
+  },
+  {
+    id: 'dw', name: '数仓', type: '中', short: '数', icon: ICONS.dw,
+    c1: '#2E9CCA', c2: '#1467A8', score: 8.2, count: 86,
+    dist: [2, 1, 2, 3, 5, 9, 17, 25, 21, 15],
+    tags: ['口径统一', '出数快', '数据准确'],
+    comments: [
+      { user: '木木夕', score: 9, text: '取数需求当天就有反馈，口径文档也比以前清楚多了。', likes: 19, time: '2 小时前' },
+      { user: '北方的狼', score: 8, text: '大表查询有时候偏慢，但数据质量确实稳。', likes: 8, time: '昨天' },
+    ],
+    employees: [],
+  },
+  {
+    id: 'ls', name: '离殇', type: '中', short: '离', icon: ICONS.ls,
+    c1: '#B06BE8', c2: '#6D4CFF', score: 8.4, count: 62,
+    dist: [1, 1, 2, 2, 4, 7, 15, 25, 25, 18],
+    tags: ['氛围好', '协作顺', '爆发力强'],
+    comments: [
+      { user: '大熊', score: 9, text: '配合度很高，临时拉群支援从不推脱，靠谱。', likes: 17, time: '3 小时前' },
+      { user: '一只小橘', score: 8, text: '人不多但都能打，就是排期偶尔撞车。', likes: 7, time: '昨天' },
+    ],
+    employees: [
+      makeEmp('ls1', '干部郭', '负责人', 8.6, 12),
+      makeEmp('ls2', '小0子', '运营', 8.4, 10),
+      makeEmp('ls3', '瑟图豪', '内容', 8.2, 9),
+      makeEmp('ls4', '保研龙', '社群', 8.0, 8),
+    ],
+  },
+];
+
+const NEEDS = [
+  {
+    id: 'n1', title: '会议室预订支持手机端一键预约', cat: '办公效率',
+    status: '评审中', dept: 'HR', user: '早上下雨', time: '3 天前提出',
+    score: 8.3, count: 32,
+    people: [
+      { deptId: 'hr', empId: 'hr2', role: '提议' },
+      { deptId: 'hr', empId: 'hr1', role: '负责' },
+    ],
+    desc: '现在订会议室只能到前台登记或者找行政同事帮忙，经常出现撞会的情况。希望能像点外卖一样，在手机上看到空闲会议室并直接预约，冲突自动提醒。',
+    dist: [1, 1, 2, 3, 6, 10, 18, 24, 20, 15],
+    tags: ['高频', '影响多人', '行政效率'],
+    comments: [
+      { user: '打工人小陈', score: 9, text: '太需要了，午休时间根本抢不到会议室。', likes: 18, time: '1 天前' },
+      { user: '北方的狼', score: 8, text: '顺便把投影设备状态也能看到就更好了。', likes: 9, time: '2 天前' },
+    ],
+  },
+  {
+    id: 'n2', title: '报销流程支持电子发票自动识别', cat: '财务流程',
+    status: '进行中', dept: '小师富', user: '夜露', time: '1 周前提出',
+    score: 7.8, count: 21,
+    people: [
+      { deptId: 'xsf', empId: 'xsf1', role: '提议' },
+    ],
+    desc: '每月月底报销单数量大，手工录入发票信息耗时且容易出错。希望上传电子发票后自动识别金额、日期和税号，直接生成报销单。',
+    dist: [2, 2, 3, 5, 8, 12, 20, 22, 16, 10],
+    tags: ['降本增效', '财务'],
+    comments: [
+      { user: '大熊', score: 9, text: '上线后估计能省一半时间，期待。', likes: 14, time: '3 天前' },
+    ],
+  },
+  {
+    id: 'n3', title: '研发区 Wi-Fi 信号增强', cat: '网络环境',
+    status: '已完成', dept: '架构', user: '良强', time: '2 周前提出',
+    score: 9.0, count: 45,
+    people: [
+      { deptId: 'arch', empId: 'ar1', role: '提议' },
+      { deptId: 'arch', empId: 'ar3', role: '负责' },
+      { deptId: 'arch', empId: 'ar2', role: '参与' },
+    ],
+    desc: '研发区靠窗工位 Wi-Fi 经常掉线，影响联调和测试。希望增加 AP 或调整信号覆盖。',
+    dist: [1, 0, 1, 1, 2, 4, 8, 18, 30, 35],
+    tags: ['已解决', '体验提升'],
+    comments: [
+      { user: '夜跑的风', score: 10, text: '已经加装了两个 AP，现在满格，给行政和 IT 点赞。', likes: 31, time: '5 天前' },
+    ],
+  },
+  {
+    id: 'n4', title: '团队评分结果支持月度导出', cat: '数据报表',
+    status: '评审中', dept: 'ai', user: '空气黄', time: '2 天前提出',
+    score: 7.5, count: 12,
+    people: [
+      { deptId: 'ai', empId: 'ai2', role: '提议' },
+      { deptId: 'ai', empId: 'ai1', role: '负责' },
+    ],
+    desc: '每月例会前都要手动截图整理各团队评分，希望支持导出 Excel 或 PDF 报表，包含均分、分布和亮评摘要。',
+    dist: [3, 3, 4, 5, 7, 11, 20, 21, 15, 11],
+    tags: ['数据', '例会'],
+    comments: [
+      { user: '三三', score: 8, text: '例会刚需，每次整理半小时。', likes: 5, time: '1 天前' },
+    ],
+  },
+];
+
+const AVATAR_COLORS = [
+  ['#8E9BFF', '#5B6CFF'], ['#FFB36B', '#FF7A45'], ['#6BD9B5', '#2BC48A'],
+  ['#FF9AA2', '#F23441'], ['#7FC8F8', '#12B5CB'], ['#C9A7FF', '#8E4DFF'],
+];
+
+const HINTS = {
+  1: '非常糟糕', 2: '很糟糕', 3: '不太满意', 4: '有点失望', 5: '一般般',
+  6: '还可以', 7: '不错', 8: '挺满意', 9: '非常满意', 10: '满分好评',
+};
+
+/* ==================== 工具 ==================== */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+
+let detailStack = [];
+let ratingTarget = null;
+let needFilter = '全部';
+let homeFilter = '全部';
+
+function fmt(n) { return (Math.round(n * 10) / 10).toFixed(1); }
+
+function miniDist(dist) {
+  const max = Math.max(...dist);
+  return `<div class="mini-dist">${dist.map(v =>
+    `<i style="height:${Math.max(9, Math.round(v / max * 100))}%"></i>`
+  ).join('')}</div>`;
+}
+
+function colorFor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+
+function empAvatarStyle(e) {
+  const [a, b] = colorFor(e.name);
+  return `--c1:${a};--c2:${b}`;
+}
+
+function avatarStyle(i) {
+  const [a, b] = AVATAR_COLORS[i % AVATAR_COLORS.length];
+  return `--c1:${a};--c2:${b}`;
+}
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function statusClass(s) {
+  return s === '已完成' ? 'st-done' : s === '进行中' ? 'st-doing' : 'st-vote';
+}
+
+function findDeptOfEmp(empId) {
+  return DEPTS.find(d => d.employees.some(e => e.id === empId));
+}
+
+function getEmp(deptId, empId) {
+  const dept = DEPTS.find(d => d.id === deptId);
+  return dept ? dept.employees.find(e => e.id === empId) : null;
+}
+
+function peopleStack(people, max = 3) {
+  const list = (people || []).slice(0, max);
+  const rest = (people || []).length - list.length;
+  return `<span class="people-stack">${list.map(p => {
+    const e = getEmp(p.deptId, p.empId);
+    return e ? `<span class="avatar" style="${empAvatarStyle(e)}">${e.short}</span>` : '';
+  }).join('')}${rest > 0 ? `<span class="avatar more">+${rest}</span>` : ''}</span>`;
+}
+
+function needPeopleSection(n) {
+  if (!n.people || !n.people.length) return '';
+  return `
+    <div class="section">
+      <div class="sec-head-row">
+        <h2>相关员工</h2>
+        <span class="sec-more">${n.people.length} 人</span>
+      </div>
+      <div class="emp-grid">
+        ${n.people.map(p => {
+          const e = getEmp(p.deptId, p.empId);
+          if (!e) return '';
+          return `
+            <article class="emp-card" onclick="openEmp('${p.deptId}', '${e.id}')">
+              <div class="avatar emp-av" style="${empAvatarStyle(e)}">${e.short}</div>
+              <div class="emp-name">${e.name}</div>
+              <div class="emp-title" title="${e.title}">${p.role}</div>
+              <div class="emp-score">${fmt(e.score)}</div>
+            </article>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+/* ==================== 渲染：首页 ==================== */
+function renderHot() {
+  const hot = [...DEPTS].sort((a, b) => b.count - a.count).slice(0, 4);
+  $('#hotRow').innerHTML = hot.map(d => `
+    <article class="hot-card" onclick="openDept('${d.id}')">
+      <div class="hot-cover" style="--c1:${d.c1};--c2:${d.c2}"><span class="cover-icon">${d.icon}</span></div>
+      <div class="hot-name">${d.name}</div>
+      <div class="hot-score">${fmt(d.score)}<small>分</small></div>
+    </article>
+  `).join('');
+}
+
+function renderHome() {
+  const list = DEPTS.filter(d => homeFilter === '全部' || d.type === homeFilter);
+  $('#homeCount').textContent = `共 ${list.length} 个团队`;
+  $('#homeList').innerHTML = list.length ? list.map(d => `
+    <article class="score-card" onclick="openDept('${d.id}')">
+      <div class="cover" style="--c1:${d.c1};--c2:${d.c2}"><span class="cover-icon">${d.icon}</span></div>
+      <div class="card-body">
+        <h3>${d.name}</h3>
+        <div class="meta">${d.type} · ${d.count} 人评分 · ${d.employees.length} 名员工</div>
+        ${miniDist(d.dist)}
+      </div>
+      <div class="card-score">${fmt(d.score)}<small>/10</small></div>
+    </article>
+  `).join('') : `<div class="empty" style="padding:48px 20px"><p>该分类下暂无团队</p></div>`;
+}
+
+/* ==================== 渲染：团队页 ==================== */
+function renderDeptList(keyword = '') {
+  const list = DEPTS.filter(d => !keyword || d.name.includes(keyword));
+  $('#deptList').innerHTML = list.length ? list.map(d => `
+    <article class="dept-row" onclick="openDept('${d.id}')">
+      <div class="cover sm" style="--c1:${d.c1};--c2:${d.c2}"><span class="cover-icon">${d.icon}</span></div>
+      <div class="dept-info">
+        <div class="dept-name">${d.name}</div>
+        <div class="dept-meta">${d.type} · ${d.count} 人评分 · ${d.employees.length} 名员工</div>
+        ${miniDist(d.dist)}
+      </div>
+      <div class="dept-score">${fmt(d.score)}<small>/10</small></div>
+    </article>
+  `).join('') : `<div class="empty" style="padding:60px 20px"><p>没有找到相关数据</p></div>`;
+}
+
+/* ==================== 渲染：需求页 ==================== */
+function renderNeeds() {
+  const list = NEEDS.filter(n => needFilter === '全部' || n.status === needFilter);
+  $('#needList').innerHTML = list.length ? list.map(n => `
+    <article class="need-card" onclick="openNeed('${n.id}')">
+      <div class="need-head">
+        <span class="status ${statusClass(n.status)}"><i></i>${n.status}</span>
+        <span class="need-cat">${n.cat}</span>
+      </div>
+      <h3>${escapeHTML(n.title)}</h3>
+      <p>${escapeHTML(n.desc)}</p>
+      <div class="need-foot">
+        <span class="need-author">${peopleStack(n.people)}${n.dept} · ${n.user}</span>
+        <span class="need-stat"><b>${fmt(n.score)}</b> 分 · ${n.count} 人参与</span>
+      </div>
+    </article>
+  `).join('') : `<div class="empty" style="padding:60px 20px"><p>暂无相关需求</p></div>`;
+}
+
+/* ==================== 详情页 ==================== */
+function renderDetailPage() {
+  const top = detailStack[detailStack.length - 1];
+  if (!top) return;
+  if (top.kind === 'need') {
+    renderNeedDetail(top.data);
+    $('#rateBtn').textContent = '支持打分';
+  } else {
+    renderScoreDetail(top);
+    $('#rateBtn').textContent = '我要打分';
+  }
+}
+
+const TREND_LABELS = ['6月', '7月', '8月', '9月', '10月', '11月'];
+
+function makeTrend(score) {
+  const offsets = [-0.6, -0.2, -0.5, -0.3, -0.1, 0];
+  return offsets.map(o => Math.max(1, Math.min(10, +(score + o).toFixed(1))));
+}
+
+function distBars(d) {
+  const maxDist = Math.max(...d.dist);
+  return d.dist.map((v, i) => `
+    <div class="bar-col">
+      <span class="bar-val">${v}%</span>
+      <div class="bar-track">
+        <div class="bar" style="height:${Math.max(4, Math.round(v / maxDist * 100))}%"></div>
+      </div>
+      <span class="bar-label">${i + 1}</span>
+    </div>
+  `).join('');
+}
+
+function trendSVG(d) {
+  const vals = makeTrend(d.score);
+  const W = 336, H = 148, L = 26, R = 14, T = 14, B = 22;
+  const iw = W - L - R;
+  const ih = H - T - B;
+  const px = i => L + (iw / (vals.length - 1)) * i;
+  const py = v => T + ih * (1 - v / 10);
+
+  let grid = '';
+  [0, 2, 4, 6, 8, 10].forEach(v => {
+    const yy = py(v);
+    grid += `<line x1="${L}" y1="${yy}" x2="${W - R}" y2="${yy}" stroke="var(--chart-grid)" stroke-width="1"/>`;
+    grid += `<text x="${L - 7}" y="${yy + 3}" text-anchor="end" class="chart-axis">${v}</text>`;
+  });
+
+  const pts = vals.map((v, i) => `${px(i)},${py(v)}`).join(' ');
+  const dots = vals.slice(0, -1).map((v, i) =>
+    `<circle cx="${px(i)}" cy="${py(v)}" r="2.3" fill="var(--brand)"/>`
+  ).join('');
+
+  const lx = px(vals.length - 1);
+  const ly = py(vals[vals.length - 1]);
+  const dash = `<line x1="${lx}" y1="${T}" x2="${lx}" y2="${H - B}" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3 4"/>`;
+  const star = `<text x="${lx}" y="${ly + 6}" text-anchor="middle" font-size="16" fill="#F5B301">★</text>`;
+  const val = `<text x="${lx}" y="${ly + 27}" text-anchor="middle" class="chart-value">${fmt(d.score)}</text>`;
+  const xlabels = TREND_LABELS.map((l, i) =>
+    `<text x="${px(i)}" y="${H - 4}" text-anchor="middle" class="chart-axis">${l}</text>`
+  ).join('');
+
+  return `<svg viewBox="0 0 ${W} ${H}" class="trend-svg">${grid}${dash}<polyline points="${pts}" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>${dots}${star}${val}${xlabels}</svg>`;
+}
+
+function rateCard(d) {
+  return `
+    <div class="rate-card">
+      <div class="rate-head">
+        <div class="rate-brand"><span class="mark">良</span>良扑评分</div>
+        <div class="rate-tabs">
+          <button class="rt on" onclick="switchRateTab(this, 'trend')">趋势</button>
+          <button class="rt" onclick="switchRateTab(this, 'dist')">分布</button>
+        </div>
+      </div>
+      <div class="rate-trend">${trendSVG(d)}</div>
+      <div class="rate-dist" style="display:none">
+        <div class="dist-head"><span>共 ${d.count} 人评分</span></div>
+        <div class="dist-bars">${distBars(d)}</div>
+      </div>
+      <div class="rate-foot">
+        <button class="rate-now" onclick="openSheet()">立即评分</button>
+        <div class="star-rate">
+          ${[1, 2, 3, 4, 5].map(i => `<button onclick="starRate(${i})" aria-label="${i} 星">★</button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function switchRateTab(btn, mode) {
+  const card = btn.closest('.rate-card');
+  if (!card) return;
+  $$('.rt', card).forEach(b => b.classList.toggle('on', b === btn));
+  $('.rate-trend', card).style.display = mode === 'trend' ? '' : 'none';
+  $('.rate-dist', card).style.display = mode === 'dist' ? '' : 'none';
+}
+
+function starRate(n) {
+  openSheet();
+  pickScore(n * 2);
+}
+
+function commentsBlock(comments, withHead = true) {
+  if (!comments || !comments.length) return '';
+  return `
+    <div class="section">
+      ${withHead ? '<h2>亮评</h2>' : ''}
+      ${comments.map((c, i) => `
+        <div class="comment">
+          <div class="avatar" style="${avatarStyle(i)}">${escapeHTML(c.user.slice(0, 1))}</div>
+          <div class="c-body">
+            <div class="c-head">
+              <b>${escapeHTML(c.user)}</b>
+              ${c.replyTo ? `<span class="c-reply-to">回复 @${escapeHTML(c.replyTo)}</span>` : ''}
+              <span class="c-score">${c.score} 分</span>
+            </div>
+            <p>${escapeHTML(c.text)}</p>
+            <div class="c-foot">
+              <span>${c.time}</span>
+              <span class="like" onclick="likeComment(this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                <b>${c.likes}</b>
+              </span>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function renderScoreDetail(top) {
+  const d = top.data;
+  const isEmp = top.kind === 'emp';
+  $('#detailTitle').textContent = d.name;
+  const pct = Math.round(d.score * 10);
+
+  let hero;
+  if (isEmp) {
+    const dept = findDeptOfEmp(d.id);
+    hero = `
+      <div class="detail-hero">
+        <div class="av-xl" style="${empAvatarStyle(d)}">${d.short}</div>
+        <div>
+          <h1>${d.name}</h1>
+          <div class="hero-tags">
+            <span class="tag red">${d.title}</span>
+            <span class="tag">${dept ? dept.name : ''}</span>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    hero = `
+      <div class="detail-hero">
+        <div class="cover lg" style="--c1:${d.c1};--c2:${d.c2}"><span class="cover-icon">${d.icon}</span></div>
+        <div>
+          <h1>${d.name}</h1>
+          <div class="hero-tags">
+            <span class="tag red">${d.type}</span>
+            <span class="tag">团队评分</span>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  const empSection = !isEmp ? `
+    <div class="section">
+      <div class="sec-head-row">
+        <h2>团队员工</h2>
+        <span class="sec-more">${d.employees.length} 人</span>
+      </div>
+      ${d.employees.length ? `<div class="emp-grid">
+        ${d.employees.map(e => `
+          <article class="emp-card" onclick="openEmp('${d.id}', '${e.id}')">
+            <div class="avatar emp-av" style="${empAvatarStyle(e)}">${e.short}</div>
+            <div class="emp-name">${e.name}</div>
+            <div class="emp-title" title="${e.title}">${e.title.slice(0, 1)}</div>
+            <div class="emp-score">${fmt(e.score)}</div>
+          </article>
+        `).join('')}
+      </div>` : `<div class="emp-empty">暂无下挂员工</div>`}
+    </div>` : '';
+
+  let deptLink = '';
+  if (isEmp) {
+    const dept = findDeptOfEmp(d.id);
+    if (dept) {
+      deptLink = `
+        <div class="section">
+          <div class="sec-head-row"><h2>所属团队</h2></div>
+          <div class="dept-link" onclick="openDept('${dept.id}')">
+            <div class="cover sm" style="--c1:${dept.c1};--c2:${dept.c2}"><span class="cover-icon">${dept.icon}</span></div>
+            <div class="grow">
+              ${dept.name}
+              <div class="sub">查看团队评分与全部员工</div>
+            </div>
+            <span class="chev">›</span>
+          </div>
+        </div>`;
+    }
+  }
+
+  $('#detailContent').innerHTML = `
+    ${hero}
+    <div class="big-score-wrap">
+      <div class="big-score">${fmt(d.score)}<small>分</small></div>
+      <div class="score-side">
+        <span class="big-stars" style="--fill:${pct}%">
+          ★★★★★
+          <span class="fill">★★★★★</span>
+        </span>
+        <div class="rank-line">${d.count} 人评分 · 超过 ${Math.min(99, Math.round(d.score * 10.6))}% 的${isEmp ? '同事' : '团队'}</div>
+      </div>
+    </div>
+    ${rateCard(d)}
+    <div class="pills">${d.tags.map(t => `<span class="pill">${t}</span>`).join('')}</div>
+    ${empSection}
+    ${deptLink}
+    ${commentsBlock(d.comments)}
+  `;
+}
+
+function renderNeedDetail(n) {
+  $('#detailTitle').textContent = '需求详情';
+  const pct = Math.round(n.score * 10);
+  $('#detailContent').innerHTML = `
+    <div class="need-hero">
+      <span class="status ${statusClass(n.status)}"><i></i>${n.status}</span>
+      <span class="tag">${n.cat}</span>
+      <h1>${escapeHTML(n.title)}</h1>
+      <div class="need-meta">${n.dept} · ${n.user} · ${n.time}</div>
+    </div>
+    <div class="big-score-wrap">
+      <div class="big-score">${fmt(n.score)}<small>分</small></div>
+      <div class="score-side">
+        <span class="big-stars" style="--fill:${pct}%">
+          ★★★★★
+          <span class="fill">★★★★★</span>
+        </span>
+        <div class="rank-line">${n.count} 人支持 · 全员打分决定优先级</div>
+      </div>
+    </div>
+    ${rateCard(n)}
+    <div class="section">
+      <h2>需求描述</h2>
+      <p class="need-desc-long">${escapeHTML(n.desc)}</p>
+    </div>
+    <div class="pills">${n.tags.map(t => `<span class="pill">${t}</span>`).join('')}</div>
+    ${needPeopleSection(n)}
+    ${commentsBlock(n.comments, false).replace('class="section"', 'class="section" style="padding-top:18px"')}
+  `;
+}
+
+/* ==================== 详情导航 ==================== */
+function openDept(id) {
+  const d = DEPTS.find(x => x.id === id);
+  if (!d) return;
+  detailStack = [{ kind: 'dept', data: d }];
+  showDetailPage();
+}
+
+function openEmp(deptId, empId) {
+  const dept = DEPTS.find(x => x.id === deptId);
+  if (!dept) return;
+  const emp = dept.employees.find(e => e.id === empId);
+  if (!emp) return;
+  detailStack.push({ kind: 'emp', data: emp });
+  renderDetailPage();
+  $('#page-detail').scrollTop = 0;
+}
+
+function openNeed(id) {
+  const n = NEEDS.find(x => x.id === id);
+  if (!n) return;
+  detailStack = [{ kind: 'need', data: n }];
+  showDetailPage();
+}
+
+function showDetailPage() {
+  renderDetailPage();
+  const page = $('#page-detail');
+  page.scrollTop = 0;
+  page.classList.add('open');
+  $('#tabbar').classList.add('hide');
+}
+
+function hideDetailPage() {
+  detailStack = [];
+  $('#page-detail').classList.remove('open');
+  $('#tabbar').classList.remove('hide');
+}
+
+function goBack() {
+  detailStack.pop();
+  if (!detailStack.length) {
+    hideDetailPage();
+    return;
+  }
+  renderDetailPage();
+  $('#page-detail').scrollTop = 0;
+}
+
+/* ==================== Tab 切换 ==================== */
+function switchTab(name) {
+  hideDetailPage();
+  $$('.page[data-page]').forEach(p => p.classList.toggle('active', p.dataset.page === name));
+  $$('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === name));
+}
+
+/* ==================== 打分弹层 ==================== */
+function openSheet() {
+  const top = detailStack[detailStack.length - 1];
+  if (!top) return;
+  ratingTarget = top;
+  $('#sheetTitle').innerHTML = `给 <span>${escapeHTML(targetName(top))}</span> 打分`;
+  $$('#scoreGrid button').forEach(b => b.classList.remove('on'));
+  $('#scoreHint').textContent = '点击分数开始评分';
+  $('#commentInput').value = '';
+  $('#charCount').textContent = '0/100';
+  $('#submitBtn').classList.add('disabled');
+  $('#overlay').classList.add('show');
+  $('#sheet').classList.add('show');
+}
+
+function targetName(t) {
+  if (t.kind === 'need') {
+    const s = t.data.title;
+    return s.length > 12 ? s.slice(0, 12) + '…' : s;
+  }
+  return t.data.name;
+}
+
+function closeSheet() {
+  $('#overlay').classList.remove('show');
+  $('#sheet').classList.remove('show');
+}
+
+function pickScore(n) {
+  ratingTargetScore = n;
+  $$('#scoreGrid button').forEach((b, i) => b.classList.toggle('on', i + 1 === n));
+  $('#scoreHint').innerHTML = `你打了 <b>${n}</b> 分 · ${HINTS[n]}`;
+  $('#submitBtn').classList.remove('disabled');
+}
+
+let ratingTargetScore = 0;
+
+function onCommentInput() {
+  const v = $('#commentInput').value;
+  $('#charCount').textContent = `${v.length}/100`;
+}
+
+function submitRating() {
+  if (!ratingTarget || !ratingTargetScore) return;
+  const { kind, data: d } = ratingTarget;
+  const text = $('#commentInput').value.trim();
+
+  d.count += 1;
+  d.score = Math.round(((d.score * (d.count - 1) + ratingTargetScore) / d.count) * 10) / 10;
+  d.comments = d.comments || [];
+  if (text) {
+    d.comments.unshift({ user: '我', score: ratingTargetScore, text, likes: 0, time: '刚刚' });
+  } else if (ratingTargetScore >= 8) {
+    d.comments.unshift({ user: '我', score: ratingTargetScore, text: HINTS[ratingTargetScore] + '！', likes: 0, time: '刚刚' });
+  }
+
+  renderDetailPage();
+  renderHome();
+  renderDeptList();
+  renderHot();
+  renderNeeds();
+  closeSheet();
+  toast(kind === 'need' ? '支持成功，感谢你的打分' : '评分成功，感谢你的评价');
+}
+
+/* ==================== 评论点赞 ==================== */
+function likeComment(el) {
+  if (el.classList.contains('liked')) return;
+  el.classList.add('liked');
+  const b = el.querySelector('b');
+  b.textContent = Number(b.textContent) + 1;
+  el.querySelector('svg').setAttribute('fill', 'currentColor');
+}
+
+/* ==================== 主题 ==================== */
+const MOON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+const SUN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem('lp-theme', t); } catch (e) {}
+  $$('.theme-btn, #themeBtnHome').forEach(b => {
+    b.innerHTML = t === 'dark' ? SUN_SVG : MOON_SVG;
+  });
+  const sw = $('#themeSwitch');
+  if (sw) sw.checked = t === 'dark';
+}
+
+function toggleTheme() {
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+}
+
+/* ==================== Toast ==================== */
+let toastTimer = null;
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1900);
+}
+
+/* ==================== 初始化 ==================== */
+(function init() {
+  let saved = 'light';
+  try { saved = localStorage.getItem('lp-theme') || 'light'; } catch (e) {}
+  applyTheme(saved);
+
+  $$('[data-icon]').forEach(el => {
+    el.innerHTML = `<span class="cover-icon">${ICONS[el.dataset.icon]}</span>`;
+  });
+
+  renderHot();
+  renderHome();
+  renderDeptList();
+  renderNeeds();
+
+  // 首页分类 chip
+  $('#homeChips').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    $$('.chip', $('#homeChips')).forEach(c => c.classList.remove('on'));
+    chip.classList.add('on');
+    homeFilter = chip.textContent.trim();
+    renderHome();
+  });
+
+  // 需求状态筛选
+  $('#needChips').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    $$('.chip', $('#needChips')).forEach(c => c.classList.remove('on'));
+    chip.classList.add('on');
+    needFilter = chip.textContent.trim();
+    renderNeeds();
+  });
+
+  // 排序交互（视觉）
+  $$('.sort').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.sort').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+    });
+  });
+
+  // 团队搜索
+  $('.search-wrap input').addEventListener('input', e => {
+    renderDeptList(e.target.value.trim());
+  });
+})();
+</script>
+</body>
+</html>
