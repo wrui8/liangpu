@@ -15,6 +15,9 @@ concurrency:
   group: ios-unsigned-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write   # 用于把 ipa 挂到 ios-latest Release
+
 jobs:
   build-ipa:
     name: 构建 ipa
@@ -65,3 +68,16 @@ jobs:
           path: liangpu-ios-*-unsigned.ipa
           if-no-files-found: error
           retention-days: 30
+
+      # 挂到固定的 ios-latest Release：无需登录即可直接下载
+      # https://github.com/wrui8/liangpu/releases/download/ios-latest/<文件名>
+      - name: 发布到 ios-latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release view ios-latest >/dev/null 2>&1 || \
+            gh release create ios-latest --target "$GITHUB_SHA" \
+              --title "iOS 未签名包（最新）" \
+              --notes "由 GitHub Actions 在 macOS runner 上构建，每次运行覆盖本 Release 的 ipa。未签名包需用 Sideloadly / AltStore 以个人 Apple ID 自签后安装。"
+          gh release upload ios-latest liangpu-ios-*-unsigned.ipa --clobber
