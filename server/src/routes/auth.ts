@@ -90,6 +90,31 @@ export async function authRoutes(app: FastifyInstance) {
     return { user: serUser(user) };
   });
 
+  app.post('/auth/password', { preHandler: requireAuth }, async (req, reply) => {
+    const parsed = z
+      .object({
+        oldPassword: z.string().min(1, '请输入原密码'),
+        newPassword: z.string().min(6, '新密码至少 6 位').max(64),
+      })
+      .safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send({ error: parsed.error.issues[0].message });
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) return reply.code(401).send({ error: '请先登录' });
+    if (!(await bcrypt.compare(parsed.data.oldPassword, user.password))) {
+      return reply.code(400).send({ error: '原密码不正确' });
+    }
+    if (parsed.data.oldPassword === parsed.data.newPassword) {
+      return reply.code(400).send({ error: '新密码不能与原密码相同' });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: await bcrypt.hash(parsed.data.newPassword, 10) },
+    });
+    return { ok: true };
+  });
+
   app.get('/me/ratings', { preHandler: requireAuth }, async req => {
     const ratings = await prisma.rating.findMany({
       where: { userId: req.user.id },
