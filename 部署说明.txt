@@ -57,11 +57,14 @@
     liangpu-windows-0.1.0.zip          Windows 客户端
     liangpu-android-arm64-v8a-0.1.0.apk  Android 客户端（多数机型，官网主下载）
     liangpu-android-0.1.0.zip           Android 全机型包（三个 ABI + 安装说明）
+    liangpu-ios-0.1.0-unsigned.ipa      iOS 未签名包（需用户自行重签安装）
     liangpu-admin-cert.zip              管理端证书安装包
   更新安装包时直接替换文件即可，无需重启；也可在项目目录执行
   powershell scripts\refresh-dist.ps1 统一刷新。
-  官网下载页提供 Windows 与 Android 入口；iOS 需在 macOS 生成未签名包后由用户自签安装
-  （iOS 工程已就绪，需在 macOS 上构建未签名 IPA，由用户用 Sideloadly / AltStore 自行签名安装）。
+  官网下载页提供 Windows、Android 与 iOS 入口。
+  iOS 为未签名 ipa（由 GitHub Actions 的 macOS runner 构建），iPhone 用户需在电脑上
+  用 Sideloadly 导入 ipa、以自己的 Apple ID 重签后安装，再到「设置 → 通用 →
+  VPN与设备管理」信任描述文件（个人签名 7 天有效，到期重签，数据不丢）。
 
   这是 HTTPS-only 部署：明文 HTTP 无法连接。
   旧版客户端（HTTP）需要重新安装本目录配套的 APK / exe。

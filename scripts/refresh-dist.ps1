@@ -60,3 +60,12 @@ Copy-Item -LiteralPath (Join-Path $dist ($lp + '-0.1.0-arm64-v8a.apk')) -Destina
 Copy-Item -LiteralPath $apkZip -Destination (Join-Path $siteDl 'liangpu-android-0.1.0.zip') -Force
 Write-Output ('SITE_APK=' + (Get-Item -LiteralPath (Join-Path $siteDl 'liangpu-android-arm64-v8a-0.1.0.apk')).Length)
 Write-Output ('SITE_APK_ZIP=' + (Get-Item -LiteralPath (Join-Path $siteDl 'liangpu-android-0.1.0.zip')).Length)
+
+# ---------- 站点 iOS 包（由 GitHub Actions 在 macOS 上构建后下载到 dist） ----------
+$iosIpa = Join-Path $dist 'liangpu-ios-0.1.0-unsigned.ipa'
+if (Test-Path -LiteralPath $iosIpa) {
+  Copy-Item -LiteralPath $iosIpa -Destination (Join-Path $siteDl 'liangpu-ios-0.1.0-unsigned.ipa') -Force
+  Write-Output ('SITE_IOS=' + (Get-Item -LiteralPath (Join-Path $siteDl 'liangpu-ios-0.1.0-unsigned.ipa')).Length)
+} else {
+  Write-Output 'SITE_IOS=MISSING（先在 macOS / GitHub Actions 构建 ipa 并放到 dist）'
+}

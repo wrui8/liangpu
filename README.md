@@ -53,11 +53,12 @@ docker compose up -d --build
   健康检查 `GET /api/health`
 - 官网/客户端下载页 `http://<服务器IP>:7003/download/`：独立明文端口，公开访问，
   手机浏览器无需安装内部 CA 即可直接打开；只托管官网页面与安装包，不暴露 API 或管理端。
-  页面提供 Windows（zip）与 Android（arm64 APK + 全机型 zip）下载，iOS 入口标注「筹备中」
+  页面提供 Windows（zip）、Android（arm64 APK + 全机型 zip）与 iOS（未签名 ipa）下载
 - 7001 仍保留 `/download/`（已信任内部 CA 的电脑可继续访问），对外分发请使用 7003 入口
 - 下载页的安装包放在 `docker-data/downloads/`（只读挂载到容器 `/app/downloads`）：
   `liangpu-windows-0.1.0.zip`、`liangpu-android-arm64-v8a-0.1.0.apk`、`liangpu-android-0.1.0.zip`、
-  `liangpu-admin-cert.zip`。重新执行 `powershell scripts/refresh-dist.ps1` 会刷新 dist 并同步这些文件，
+  `liangpu-ios-0.1.0-unsigned.ipa`、`liangpu-admin-cert.zip`。重新执行 `powershell scripts/refresh-dist.ps1`
+  会刷新 dist 并同步这些文件（iOS ipa 需先下载到 `dist/`），
   替换后无需重建容器
 - 动态图片保存在 `docker-data/uploads/`（挂载到容器 `/app/data/uploads`，静态路径 `/uploads/`），
   备份时请与 `liangpu.db`、`certs/` 一起备份整个 `docker-data` 目录
@@ -141,8 +142,10 @@ bash scripts/build-ios-unsigned.sh
   「设置 → 通用 → VPN与设备管理」信任描述文件（个人签名 7 天有效，到期需重签）。
 
   手边没有 Mac 时，推到 GitHub 后由 `.github/workflows/ios-unsigned.yml` 在 macOS runner
-  上自动构建：Actions 页面进入「iOS 未签名包」→ Run workflow，或直接推送 `app/` 的改动；
-  跑完在该次运行的 Artifacts 里下载 `liangpu-ios-unsigned-<版本>.ipa`。
+  上自动构建：Actions 页面进入「iOS 未签名包」→ Run workflow，或直接推送 `app/` 的改动。
+  构建完成后 ipa 会同时挂到固定 Release（免登录下载：
+  `https://github.com/wrui8/liangpu/releases/download/ios-latest/liangpu-ios-0.1.0-unsigned.ipa`）
+  和该次运行的 Artifacts。下载后放回 `dist/`，再执行 `refresh-dist.ps1` 即可同步到官网下载目录。
 
 ## 安全设计
 

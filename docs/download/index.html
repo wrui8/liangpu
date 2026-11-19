@@ -574,7 +574,7 @@ footer{border-top:1px solid var(--line);padding:36px 0 46px;margin-top:16px;colo
         </article>
 
         <!-- iOS -->
-        <article class="dl-card off">
+        <article class="dl-card">
           <div class="dl-head">
             <span class="dl-ico">
               <svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 4.6h3"/><path d="M12 18.2h.01"/></svg>
@@ -583,16 +583,22 @@ footer{border-top:1px solid var(--line);padding:36px 0 46px;margin-top:16px;colo
               <h3>iOS</h3>
               <p>iPhone 客户端</p>
             </div>
-            <span class="dl-badge mute">筹备中</span>
+            <span class="dl-badge mute">需自签</span>
           </div>
           <ul class="dl-specs">
-            <li><span class="k">系统</span><span class="v">iOS 15+（自签安装）</span></li>
-            <li><span class="k">状态</span><span class="v">暂未开放</span></li>
-            <li><span class="k">分发</span><span class="v">企业签名 / 内部分发</span></li>
+            <li><span class="k">系统</span><span class="v">iOS 15 及以上</span></li>
+            <li><span class="k">大小</span><span class="v num">8.7 MB</span></li>
+            <li><span class="k">安装</span><span class="v">未签名包，需自行重签</span></li>
           </ul>
           <div class="dl-actions">
-            <span class="btn disabled">暂未开放</span>
-            <div class="dl-alt">iOS 需在 macOS 构建未签名包，用 Sideloadly 自签安装；请联系运维获取</div>
+            <a class="btn gold" href="/downloads/liangpu-ios-0.1.0-unsigned.ipa" download="liangpu-ios-0.1.0-unsigned.ipa">
+              下载 iOS 版
+              <small>ipa · 8.7 MB · 未签名</small>
+            </a>
+            <div class="dl-alt">
+              电脑安装 <b>Sideloadly</b>，导入本 ipa 并用你的 Apple ID 重签后装到 iPhone；
+              再到「设置 → 通用 → VPN与设备管理」信任描述文件（个人签名 7 天有效）。
+            </div>
           </div>
         </article>
       </div>
@@ -744,8 +750,8 @@ footer{border-top:1px solid var(--line);padding:36px 0 46px;margin-top:16px;colo
           <p>绝大多数手机下载 <strong>arm64-v8a</strong> 那个即可。老旧 32 位手机用 armeabi-v7a，安卓模拟器用 x86_64；分不清就下载「全机型包」，三个 APK 和安装说明都在里面，试其中一个能装就用它。</p>
         </details>
         <details>
-          <summary>iOS 版什么时候有？</summary>
-          <p>iOS 工程已就绪，但苹果只允许在 macOS + Xcode 上编译。运维在 Mac 上生成未签名 IPA 后，用 Sideloadly / AltStore 以你自己的 Apple ID 重签名即可安装（个人签名 7 天有效，到期需重新签）。在此之前，iPhone 可以用浏览器访问本页，但无法使用 App 功能。</p>
+          <summary>iOS 版怎么安装？</summary>
+          <p>苹果只允许在 macOS + Xcode 上编译，本站提供的是云端构建的<b>未签名 IPA</b>，不能直接双击安装。请用电脑下载并安装 <b>Sideloadly</b>（Windows / macOS 均可），连上 iPhone，把 ipa 拖进去，用你自己的 Apple ID 重签后安装；装好后到「设置 → 通用 → VPN与设备管理」点信任。iOS 16 及以上还需在「设置 → 隐私与安全性 → 开发者模式」中打开开发者模式并重启。个人签名 7 天有效，到期用同样方法重签即可，数据不会丢。</p>
         </details>
         <details>
           <summary>手机打开本页需要安装证书吗？</summary>
